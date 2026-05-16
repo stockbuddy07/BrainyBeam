@@ -1,407 +1,268 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
+import pickle
 import plotly.express as px
 import plotly.graph_objects as go
-import os
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.naive_bayes import GaussianNB
-from xgboost import XGBClassifier
-from sklearn.metrics import (
-    accuracy_score, precision_score, recall_score,
-    f1_score, confusion_matrix
-)
+import time
 
-# ── Page Config ──────────────────────────────────────────────
-st.set_page_config(
-    page_title="Bank Campaign Sense",
-    page_icon="🏦",
-    layout="wide",
-)
+# Page config
+st.set_page_config(page_title="Bank Campaign Sense", page_icon="🏦", layout="wide")
 
-# ── Simple Styling ───────────────────────────────────────────
+# Custom CSS for dark theme adjustments
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
-    
-    [data-testid="stMetric"] {
-        background: #1e1e2f;
-        padding: 16px;
-        border-radius: 12px;
-        border-left: 4px solid #667eea;
+    .stApp {
+        background-color: #0a0e1a;
+        color: #f1f5f9;
     }
-    [data-testid="stMetricLabel"] {
-        color: #aaa !important;
+    .css-1d391kg {
+        background-color: #1e293b;
     }
-    [data-testid="stMetricValue"] {
-        color: #ffffff !important;
+    h1, h2, h3 {
+        color: #f8fafc;
     }
-    .stTabs [aria-selected="true"] {
-        font-weight: 700;
+    .st-emotion-cache-16txtl3 {
+        padding-top: 2rem;
+    }
+    /* Metric styling */
+    div[data-testid="stMetricValue"] {
+        color: #3b82f6;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# ── Data Loading ─────────────────────────────────────────────
-def load_csv(source):
-    """Try multiple separators to read the bank dataset."""
-    for sep in [';', ',', '\t']:
-        try:
-            if hasattr(source, 'seek'):
-                source.seek(0)
-            df = pd.read_csv(source, sep=sep)
-            df.columns = [c.strip().lower() for c in df.columns]
-            if 'deposit' in df.columns and 'y' not in df.columns:
-                df.rename(columns={'deposit': 'y'}, inplace=True)
-            if 'y' in df.columns and len(df.columns) > 5:
-                return df
-        except:
-            continue
-    return None
+# Load Model
+@st.cache_resource
+def load_model():
+    with open('gb_model.pkl', 'rb') as f:
+        return pickle.load(f)
 
-# ── Sidebar ──────────────────────────────────────────────────
+try:
+    model_pipeline = load_model()
+    model_loaded = True
+except Exception as e:
+    model_loaded = False
+    st.error("Error loading the model. Make sure you have run `train_model.py` to generate `gb_model.pkl`.")
+
+# Load sample data for overview (cache to avoid reloading)
+@st.cache_data
+def load_data():
+    try:
+        return pd.read_csv('bank.xls')
+    except:
+        return pd.DataFrame() # Return empty if not found
+
+df = load_data()
+
+# ── Sidebar Navigation ──
 st.sidebar.title("🏦 Bank Campaign Sense")
+st.sidebar.markdown("AI-Powered Term Deposit Prediction")
+page = st.sidebar.radio("Navigation", ["Overview", "Bulk Scanner", "Predict Subscription"])
+
 st.sidebar.markdown("---")
-uploaded_file = st.sidebar.file_uploader("Upload Dataset", type=["xls", "csv"])
+st.sidebar.markdown("**Created by:** Ayush Gajjar")
+st.sidebar.markdown("**Tools:** Python, Streamlit, Scikit-Learn")
 
-df = None
-if uploaded_file:
-    df = load_csv(uploaded_file)
-else:
-    for path in ['bank.xls', '../bank.xls', 'bank.csv']:
-        if os.path.exists(path):
-            df = load_csv(path)
-            if df is not None and 'y' in df.columns:
-                break
-            df = None
-
-if df is None or 'y' not in df.columns:
-    st.title("🏦 Bank Campaign Sense")
-    st.info("👈 Please upload the `bank.xls` dataset using the sidebar to get started.")
-    if df is not None:
-        st.warning(f"File loaded but target column `y` not found. Columns: {df.columns.tolist()}")
-    st.stop()
-
-# Clean data
-df = df.drop_duplicates()
-
-# Sidebar info
-st.sidebar.markdown("---")
-st.sidebar.markdown("### 📋 Dataset Info")
-st.sidebar.write(f"**Rows:** {len(df):,}")
-st.sidebar.write(f"**Columns:** {df.shape[1]}")
-st.sidebar.write(f"**Target:** `y` (yes/no)")
-st.sidebar.markdown("---")
-st.sidebar.caption("Built by Ayush Gajjar")
-
-# ── Header ───────────────────────────────────────────────────
-st.title("🏦 Bank Campaign Sense")
-st.caption("Predicting Term Deposit Subscriptions using Machine Learning")
-st.markdown("---")
-
-# ── Tabs ─────────────────────────────────────────────────────
-tab1, tab2, tab3 = st.tabs(["📊 Dashboard", "🤖 Model Comparison", "🎯 Predict"])
-
-# ══════════════════════════════════════════════════════════════
-# TAB 1: DASHBOARD (EDA)
-# ══════════════════════════════════════════════════════════════
-with tab1:
-
-    # KPI Metrics
-    conv_rate = (df['y'] == 'yes').mean() * 100
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Total Customers", f"{len(df):,}")
-    col2.metric("Conversion Rate", f"{conv_rate:.1f}%")
-    col3.metric("Avg Age", f"{df['age'].mean():.0f} yrs")
-    col4.metric("Avg Balance", f"€{df['balance'].mean():,.0f}")
-
-    st.markdown("---")
-
-    # Row 1: Target distribution
-    st.subheader("📈 Campaign Response")
-    c1, c2 = st.columns(2)
-
-    with c1:
-        counts = df['y'].value_counts().reset_index()
-        counts.columns = ['Response', 'Count']
-        fig = px.bar(counts, x='Response', y='Count', color='Response',
-                     color_discrete_map={'yes': '#66c2a5', 'no': '#fc8d62'},
-                     text='Count', title='Response Count')
-        fig.update_traces(textposition='outside')
-        fig.update_layout(showlegend=False, height=380)
-        st.plotly_chart(fig, use_container_width=True)
-
-    with c2:
-        fig = px.pie(df, names='y', title='Response Proportion',
-                     color='y', color_discrete_map={'yes': '#66c2a5', 'no': '#fc8d62'},
-                     hole=0.4)
-        fig.update_layout(height=380)
-        st.plotly_chart(fig, use_container_width=True)
-
-    # Row 2: Age & Balance
-    st.subheader("👤 Customer Demographics")
-    c3, c4 = st.columns(2)
-
-    with c3:
-        fig = px.histogram(df, x='age', color='y', nbins=30, barmode='overlay',
-                          color_discrete_map={'yes': '#66c2a5', 'no': '#fc8d62'},
-                          title='Age Distribution', opacity=0.7)
-        fig.update_layout(height=380)
-        st.plotly_chart(fig, use_container_width=True)
-
-    with c4:
-        fig = px.box(df, x='y', y='balance', color='y',
-                    color_discrete_map={'yes': '#66c2a5', 'no': '#fc8d62'},
-                    title='Balance by Response')
-        fig.update_layout(height=380, showlegend=False)
-        st.plotly_chart(fig, use_container_width=True)
-
-    # Row 3: Job & Education
-    st.subheader("💼 Category Analysis")
-    c5, c6 = st.columns(2)
-
-    with c5:
-        job_data = df.groupby(['job', 'y']).size().reset_index(name='count')
-        fig = px.bar(job_data, x='job', y='count', color='y', barmode='group',
-                    color_discrete_map={'yes': '#66c2a5', 'no': '#fc8d62'},
-                    title='Job Type vs Response')
-        fig.update_layout(height=400, xaxis_tickangle=-45)
-        st.plotly_chart(fig, use_container_width=True)
-
-    with c6:
-        edu_data = df.groupby(['education', 'y']).size().reset_index(name='count')
-        fig = px.bar(edu_data, x='education', y='count', color='y', barmode='group',
-                    color_discrete_map={'yes': '#66c2a5', 'no': '#fc8d62'},
-                    title='Education vs Response')
-        fig.update_layout(height=400)
-        st.plotly_chart(fig, use_container_width=True)
-
-    # Row 4: Correlation & Duration
-    st.subheader("🔗 Correlation & Call Duration")
-    c7, c8 = st.columns(2)
-
-    with c7:
-        num_df = df.select_dtypes(include=np.number)
-        corr = num_df.corr()
-        fig = px.imshow(corr, text_auto='.2f', color_continuous_scale='RdBu_r',
-                       title='Correlation Heatmap', zmin=-1, zmax=1, aspect='auto')
-        fig.update_layout(height=450)
-        st.plotly_chart(fig, use_container_width=True)
-
-    with c8:
-        fig = px.box(df, x='y', y='duration', color='y',
-                    color_discrete_map={'yes': '#66c2a5', 'no': '#fc8d62'},
-                    title='Call Duration vs Response',
-                    labels={'duration': 'Duration (sec)', 'y': 'Subscribed'})
-        fig.update_layout(height=450, showlegend=False)
-        st.plotly_chart(fig, use_container_width=True)
-
-    # Key Insights
-    st.subheader("💡 Key Insights")
-    yes_df = df[df['y'] == 'yes']
-    no_df = df[df['y'] == 'no']
-
-    i1, i2, i3 = st.columns(3)
-    with i1:
-        st.info(f"📞 **Call Duration**: Subscribers had avg call of **{yes_df['duration'].mean():.0f}s** "
-                f"vs **{no_df['duration'].mean():.0f}s** for non-subscribers.")
-    with i2:
-        st.info(f"💰 **Balance**: Subscribers hold **€{yes_df['balance'].mean():,.0f}** avg balance "
-                f"vs **€{no_df['balance'].mean():,.0f}**.")
-    with i3:
-        top_job = yes_df['job'].value_counts().index[0] if len(yes_df) > 0 else 'N/A'
-        st.info(f"👔 **Top Job**: Most conversions from **{top_job}** "
-                f"({yes_df['job'].value_counts().iloc[0] if len(yes_df)>0 else 0} subscribers).")
-
-# ══════════════════════════════════════════════════════════════
-# TAB 2: MODEL COMPARISON
-# ══════════════════════════════════════════════════════════════
-with tab2:
-    st.subheader("🤖 Training & Comparing Classification Models")
-
-    # Preprocessing
-    @st.cache_data
-    def preprocess(_df):
-        d = _df.copy()
-        d['y'] = d['y'].map({'yes': 1, 'no': 0})
-        y = d['y']
-        X = d.drop('y', axis=1)
-        cats = X.select_dtypes(include='object').columns.tolist()
-        X_enc = pd.get_dummies(X, columns=cats, drop_first=True)
-        sc = StandardScaler()
-        X_sc = pd.DataFrame(sc.fit_transform(X_enc), columns=X_enc.columns)
-        Xtr, Xte, ytr, yte = train_test_split(X_sc, y, test_size=0.2, random_state=42, stratify=y)
-        return Xtr, Xte, ytr, yte, X_enc, sc
-
-    X_train, X_test, y_train, y_test, X_encoded, scaler = preprocess(df)
-
-    st.write(f"**Train set:** {X_train.shape[0]:,} rows · **Test set:** {X_test.shape[0]:,} rows · **Features:** {X_train.shape[1]}")
-
-    @st.cache_resource
-    def train_models(_Xtr, _ytr):
-        models = {
-            "Logistic Regression": LogisticRegression(max_iter=1000, random_state=42),
-            "Decision Tree": DecisionTreeClassifier(random_state=42, max_depth=6),
-            "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42),
-            "KNN": KNeighborsClassifier(n_neighbors=7),
-            "Naive Bayes": GaussianNB(),
-            "Gradient Boosting": GradientBoostingClassifier(n_estimators=100, random_state=42),
-            "XGBoost": XGBClassifier(n_estimators=100, random_state=42, eval_metric='logloss', verbosity=0),
-        }
-        trained = {}
-        for name, model in models.items():
-            model.fit(_Xtr, _ytr)
-            trained[name] = model
-        return trained
-
-    with st.spinner("Training models..."):
-        trained_models = train_models(X_train, y_train)
-
-    # Evaluate
-    results = []
-    for name, model in trained_models.items():
-        yp = model.predict(X_test)
-        results.append({
-            "Model": name,
-            "Accuracy (%)": round(accuracy_score(y_test, yp) * 100, 2),
-            "Precision (%)": round(precision_score(y_test, yp, zero_division=0) * 100, 2),
-            "Recall (%)": round(recall_score(y_test, yp, zero_division=0) * 100, 2),
-            "F1-Score (%)": round(f1_score(y_test, yp, zero_division=0) * 100, 2),
-        })
-
-    res_df = pd.DataFrame(results).sort_values('F1-Score (%)', ascending=False).reset_index(drop=True)
-    res_df.index += 1
-
-    best_name = res_df.iloc[0]['Model']
-    best_f1 = res_df.iloc[0]['F1-Score (%)']
-    best_acc = res_df.iloc[0]['Accuracy (%)']
-
-    st.success(f"🥇 **Best Model: {best_name}** — F1-Score: {best_f1}% · Accuracy: {best_acc}%")
-
-    # Leaderboard Table
-    st.markdown("#### 🏆 Model Leaderboard")
-    st.dataframe(res_df, use_container_width=True, height=300)
-
-    # Bar chart comparison
-    st.markdown("#### 📊 Performance Comparison")
-    fig = px.bar(res_df.melt(id_vars='Model', value_vars=['Accuracy (%)', 'Precision (%)', 'Recall (%)', 'F1-Score (%)']),
-                 x='value', y='Model', color='variable', barmode='group', orientation='h',
-                 labels={'value': 'Score (%)', 'variable': 'Metric'},
-                 color_discrete_sequence=['#667eea', '#fc8d62', '#66c2a5', '#a78bfa'])
-    fig.update_layout(height=450, legend=dict(orientation='h', y=1.12))
-    st.plotly_chart(fig, use_container_width=True)
-
-    # Confusion Matrix & Feature Importance
-    st.markdown("#### 🔍 Detailed Analysis")
-    selected_model = st.selectbox("Select a model:", res_df['Model'].tolist())
-
-    m1, m2 = st.columns(2)
-
-    with m1:
-        yp = trained_models[selected_model].predict(X_test)
-        cm = confusion_matrix(y_test, yp)
-
-        fig = px.imshow(cm, text_auto=True,
-                       x=['Predicted No', 'Predicted Yes'],
-                       y=['Actual No', 'Actual Yes'],
-                       color_continuous_scale='Blues',
-                       title=f'Confusion Matrix — {selected_model}')
-        fig.update_layout(height=400)
-        st.plotly_chart(fig, use_container_width=True)
-
-    with m2:
-        if hasattr(trained_models[selected_model], 'feature_importances_'):
-            imp = pd.Series(trained_models[selected_model].feature_importances_, index=X_encoded.columns)
-            top10 = imp.sort_values(ascending=False).head(10).reset_index()
-            top10.columns = ['Feature', 'Importance']
-
-            fig = px.bar(top10, x='Importance', y='Feature', orientation='h',
-                        title=f'Top 10 Features — {selected_model}',
-                        color='Importance', color_continuous_scale='Viridis')
-            fig.update_layout(height=400, yaxis=dict(autorange='reversed'))
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.info(f"Feature importance not available for {selected_model}.")
-
-# ══════════════════════════════════════════════════════════════
-# TAB 3: PREDICTION
-# ══════════════════════════════════════════════════════════════
-with tab3:
-    st.subheader("🎯 Predict Customer Subscription")
-    st.write("Enter customer details to predict if they will subscribe to a term deposit.")
-
-    with st.form("predict_form"):
-        st.markdown("**Customer Information**")
-        r1, r2, r3 = st.columns(3)
-        with r1:
-            p_age = st.number_input("Age", 18, 100, 35)
-            p_job = st.selectbox("Job", sorted(df['job'].unique()))
-        with r2:
-            p_marital = st.selectbox("Marital Status", sorted(df['marital'].unique()))
-            p_education = st.selectbox("Education", sorted(df['education'].unique()))
-        with r3:
-            p_balance = st.number_input("Balance (€)", -10000, 100000, 1500)
-            p_duration = st.number_input("Call Duration (sec)", 0, 5000, 250)
-
-        st.markdown("**Loan Information**")
-        l1, l2, l3 = st.columns(3)
-        with l1:
-            p_housing = st.selectbox("Housing Loan?", ["no", "yes"])
-        with l2:
-            p_loan = st.selectbox("Personal Loan?", ["no", "yes"])
-        with l3:
-            p_contact = st.selectbox("Contact Type", sorted(df['contact'].unique()) if 'contact' in df.columns else ["cellular", "telephone"])
-
-        submitted = st.form_submit_button("🔮 Predict", use_container_width=True)
-
-    if submitted:
-        X_train, X_test, y_train, y_test, X_encoded, scaler = preprocess(df)
-        trained_models = train_models(X_train, y_train)
-
-        # Build input
-        input_dict = {
-            'age': p_age, 'balance': p_balance, 'duration': p_duration,
-            'job': p_job, 'marital': p_marital, 'education': p_education,
-            'housing': p_housing, 'loan': p_loan,
-            'day': 15, 'month': 'may', 'campaign': 1,
-            'pdays': -1, 'previous': 0, 'default': 'no', 'contact': p_contact,
-        }
-        if 'poutcome' in df.columns:
-            input_dict['poutcome'] = 'unknown'
-
-        inp = pd.DataFrame([input_dict])
-        inp_enc = pd.get_dummies(inp)
-        for col in X_encoded.columns:
-            if col not in inp_enc.columns:
-                inp_enc[col] = 0
-        inp_enc = inp_enc[X_encoded.columns]
-        inp_sc = scaler.transform(inp_enc)
-
-        # Predict with best model
-        prob = float(trained_models[best_name].predict_proba(inp_sc)[0][1])
-        label = "YES" if prob > 0.5 else "NO"
-
+# ── PAGE 1: OVERVIEW ──
+if page == "Overview":
+    st.title("Dataset Overview")
+    
+    if df.empty:
+        st.warning("Could not load `bank.xls`. Please ensure the file is in the same directory.")
+    else:
+        # KPIs
+        col1, col2, col3, col4 = st.columns(4)
+        total_records = len(df)
+        subscribed = len(df[df['deposit'] == 'yes'])
+        not_subscribed = total_records - subscribed
+        rate = (subscribed / total_records) * 100
+        
+        col1.metric("Total Records", f"{total_records:,}")
+        col2.metric("Subscription Rate", f"{rate:.1f}%")
+        col3.metric("Subscribed (Yes)", f"{subscribed:,}")
+        col4.metric("Not Subscribed (No)", f"{not_subscribed:,}")
+        
         st.markdown("---")
-        st.markdown(f"**Model used:** {best_name}")
+        
+        # Charts row 1
+        c1, c2 = st.columns(2)
+        with c1:
+            st.subheader("Target Distribution")
+            fig_donut = px.pie(df, names='deposit', color='deposit',
+                              color_discrete_map={'yes': '#34d399', 'no': '#3b82f6'},
+                              hole=0.6)
+            fig_donut.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="#94a3b8")
+            st.plotly_chart(fig_donut, use_container_width=True)
+            
+        with c2:
+            st.subheader("Parameter Statistics")
+            with st.expander("View Detailed Parameter Statistics"):
+                num_cols = df.select_dtypes(include=['number']).columns
+                stats = df[num_cols].describe().T[['mean', 'std', 'min', 'max']]
+                st.dataframe(stats.style.format("{:.2f}").background_gradient(cmap='Blues'), use_container_width=True)
+            st.write("The statistics above summarise the numerical distribution of age, balance, duration, and campaign history across the 11,162 customer records.")
+            
+        # Charts row 2
+        c3, c4 = st.columns(2)
+        with c3:
+            st.subheader("Age Distribution")
+            fig_age = px.histogram(df, x='age', nbins=20, color_discrete_sequence=['#3b82f6'])
+            fig_age.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="#94a3b8")
+            st.plotly_chart(fig_age, use_container_width=True)
+            
+        with c4:
+            st.subheader("Job Type vs Campaign Response")
+            job_response = pd.crosstab(df['job'], df['deposit']).reset_index()
+            fig_job = px.bar(job_response, x='job', y=['no', 'yes'], barmode='group',
+                            color_discrete_sequence=['#f87171', '#34d399'])
+            fig_job.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="#94a3b8")
+            st.plotly_chart(fig_job, use_container_width=True)
 
-        r1, r2 = st.columns([2, 1])
-        with r1:
-            if label == "YES":
-                st.success(f"### ✅ Likely to Subscribe! (Confidence: {prob:.1%})")
-                st.balloons()
+# ── PAGE 2: BULK SCANNER ──
+elif page == "Bulk Scanner":
+    st.title("Bulk Campaign Scanner")
+    st.write("Process multiple customer records at once — upload a CSV or Excel file and get batch subscription predictions.")
+    
+    if not model_loaded:
+        st.stop()
+        
+    uploaded_file = st.file_uploader("Upload your CSV or Excel file", type=["csv", "xlsx", "xls"])
+    
+    if uploaded_file is not None:
+        try:
+            if uploaded_file.name.endswith('.csv'):
+                upload_df = pd.read_csv(uploaded_file)
             else:
-                st.error(f"### ❌ Unlikely to Subscribe (Confidence: {1-prob:.1%})")
+                try:
+                    upload_df = pd.read_excel(uploaded_file)
+                except ValueError:
+                    # Fallback for CSV files disguised with .xls extension
+                    uploaded_file.seek(0)
+                    upload_df = pd.read_csv(uploaded_file)
+                
+            st.success(f"File '{uploaded_file.name}' uploaded successfully. ({len(upload_df)} records)")
+            
+            if st.button("Run Batch Prediction", type="primary"):
+                with st.spinner("Processing records..."):
+                    time.sleep(1) # Fake delay for visual feedback
+                    
+                    # Ensure all columns are present
+                    required_cols = ['age', 'job', 'marital', 'education', 'default', 'balance', 'housing', 'loan', 'contact', 'day', 'month', 'duration', 'campaign', 'pdays', 'previous', 'poutcome']
+                    
+                    # Find missing columns
+                    missing = [c for c in required_cols if c not in upload_df.columns]
+                    if missing:
+                        st.error(f"Missing required columns in uploaded file: {', '.join(missing)}")
+                    else:
+                        # Make predictions using the ML model pipeline
+                        predictions = model_pipeline.predict(upload_df[required_cols])
+                        # Get probabilities for confidence score
+                        probs = model_pipeline.predict_proba(upload_df[required_cols])
+                        
+                        upload_df['Prediction'] = ['Yes' if p == 1 else 'No' for p in predictions]
+                        upload_df['Confidence'] = [f"{max(prob)*100:.1f}%" for prob in probs]
+                        
+                        # Show summary
+                        yes_count = sum(predictions)
+                        st.subheader("Prediction Results")
+                        c1, c2, c3 = st.columns(3)
+                        c1.metric("Total Processed", len(upload_df))
+                        c2.metric("Will Subscribe", yes_count)
+                        c3.metric("Won't Subscribe", len(upload_df) - yes_count)
+                        
+                        # Show data
+                        display_cols = ['age', 'job', 'balance', 'duration', 'Prediction', 'Confidence']
+                        st.dataframe(upload_df[display_cols].head(100), use_container_width=True)
+                        if len(upload_df) > 100:
+                            st.caption(f"Showing first 100 rows of {len(upload_df)}.")
+                            
+                        # Download button
+                        csv = upload_df.to_csv(index=False).encode('utf-8')
+                        st.download_button(
+                            label="⬇ Download Complete Results CSV",
+                            data=csv,
+                            file_name='bulk_predictions.csv',
+                            mime='text/csv',
+                        )
+        except Exception as e:
+            st.error(f"Error processing file: {str(e)}")
 
-        with r2:
-            st.metric("Subscription Probability", f"{prob:.1%}")
-            st.progress(float(prob))
-
-# ── Footer ───────────────────────────────────────────────────
-st.markdown("---")
-st.caption("Bank Campaign Sense • Built by Ayush Gajjar • Brainy Beam Info-Tech PVT LTD")
+# ── PAGE 3: PREDICT SUBSCRIPTION ──
+elif page == "Predict Subscription":
+    st.title("Predict Term Deposit Subscription")
+    st.write("Enter customer parameters to predict their likelihood of subscribing using the trained Gradient Boosting model.")
+    
+    if not model_loaded:
+        st.stop()
+        
+    with st.form("prediction_form"):
+        st.subheader("Customer Parameters")
+        
+        tab1, tab2, tab3 = st.tabs(["👤 Personal Info", "💰 Financials", "📞 Campaign Details"])
+        
+        with tab1:
+            col1, col2 = st.columns(2)
+            age = col1.number_input("Age", min_value=18, max_value=100, value=38)
+            job = col2.selectbox("Job", ["management", "technician", "entrepreneur", "blue-collar", "unknown", "retired", "admin.", "services", "self-employed", "unemployed", "housemaid", "student"])
+            marital = col1.selectbox("Marital Status", ["married", "single", "divorced"])
+            education = col2.selectbox("Education", ["tertiary", "secondary", "unknown", "primary"])
+            
+        with tab2:
+            col1, col2 = st.columns(2)
+            balance = col1.number_input("Balance (₹)", value=2000, step=100)
+            default = col2.selectbox("Credit Default", ["no", "yes"])
+            housing = col1.selectbox("Housing Loan", ["yes", "no"])
+            loan = col2.selectbox("Personal Loan", ["no", "yes"])
+            
+        with tab3:
+            col1, col2, col3 = st.columns(3)
+            duration = col1.number_input("Call Duration (sec)", value=250, step=10)
+            campaign = col2.number_input("Contacts in Campaign", min_value=1, value=2)
+            contact = col3.selectbox("Contact Type", ["cellular", "unknown", "telephone"])
+            
+            day = col1.number_input("Day of Month", min_value=1, max_value=31, value=15)
+            month = col2.selectbox("Month", ["may", "jun", "jul", "aug", "sep", "oct", "nov", "dec", "jan", "feb", "mar", "apr"])
+            
+            pdays = col1.number_input("Days since last contact", value=-1)
+            previous = col2.number_input("Previous Contacts", min_value=0, value=0)
+            poutcome = col3.selectbox("Previous Outcome", ["unknown", "other", "failure", "success"])
+            
+        st.markdown("<br>", unsafe_allow_html=True)
+        submit = st.form_submit_button("🔮 Run ML Prediction", type="primary", use_container_width=True)
+        
+    if submit:
+        # Create input dataframe
+        input_data = pd.DataFrame({
+            'age': [age], 'job': [job], 'marital': [marital], 'education': [education],
+            'default': [default], 'balance': [balance], 'housing': [housing], 'loan': [loan],
+            'contact': [contact], 'day': [day], 'month': [month], 'duration': [duration],
+            'campaign': [campaign], 'pdays': [pdays], 'previous': [previous], 'poutcome': [poutcome]
+        })
+        
+        # Predict
+        pred = model_pipeline.predict(input_data)[0]
+        prob = model_pipeline.predict_proba(input_data)[0]
+        confidence = max(prob) * 100
+        
+        st.markdown("---")
+        st.subheader("Prediction Outcome")
+        
+        res_col1, res_col2 = st.columns(2)
+        
+        if pred == 1:
+            res_col1.metric("Predicted Action", "✅ Will Subscribe")
+            res_col2.metric("Confidence Score", f"{confidence:.1f}%")
+            st.success("**Recommendation:** High-priority lead — schedule call promptly.")
+            st.progress(int(confidence) / 100, text="Confidence Level")
+        else:
+            res_col1.metric("Predicted Action", "❌ Will Not Subscribe")
+            res_col2.metric("Confidence Score", f"{confidence:.1f}%")
+            st.error("**Recommendation:** Low-priority — consider skipping or scheduling later.")
+            st.progress(int(confidence) / 100, text="Confidence Level")
+            
+        # Feature insight for the specific prediction
+        st.info("### 💡 Key Influencing Factors\n" + 
+            ("• **Duration:** Positive signal (long conversation).\n" if duration > 300 else "") +
+            ("• **Duration:** Negative signal (short conversation).\n" if duration < 100 else "") +
+            ("• **Previous Outcome:** Very strong positive signal (customer bought before).\n" if poutcome == 'success' else "") +
+            ("• **Balance:** Positive signal (high balance).\n" if balance > 2000 else ""))

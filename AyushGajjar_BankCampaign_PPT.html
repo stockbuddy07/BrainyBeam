@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bank Campaign Sense — Presentation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --bg-dark: #0f172a;
+    --bg-card: #1e293b;
+    --accent: #3b82f6;
+    --accent-light: #60a5fa;
+    --green: #34d399;
+    --orange: #fb923c;
+    --purple: #a78bfa;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-dark);
+    color: var(--text);
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  /* ── Slide System ── */
+  .slide {
+    display: none;
+    width: 100vw;
+    height: 100vh;
+    padding: 60px 80px;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .slide.active { display: flex; }
+
+  /* ── Backgrounds ── */
+  .slide::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.07;
+    background: radial-gradient(circle at 20% 80%, var(--accent) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, var(--purple) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .slide-number {
+    position: absolute;
+    bottom: 24px;
+    right: 40px;
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .branding {
+    position: absolute;
+    bottom: 24px;
+    left: 40px;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  /* ── Typography ── */
+  h1 { font-size: 52px; font-weight: 900; line-height: 1.1; margin-bottom: 16px; }
+  h2 { font-size: 38px; font-weight: 800; margin-bottom: 20px; color: var(--accent-light); }
+  h3 { font-size: 22px; font-weight: 600; margin-bottom: 14px; color: var(--green); }
+  p, li { font-size: 20px; line-height: 1.7; color: #cbd5e1; }
+  
+  .subtitle { font-size: 22px; font-weight: 300; color: var(--muted); margin-bottom: 40px; }
+
+  ul { list-style: none; margin: 10px 0; }
+  ul li { padding: 8px 0 8px 28px; position: relative; font-size: 19px; }
+  ul li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: var(--accent-light);
+    font-weight: 700;
+  }
+
+  /* ── Cards Grid ── */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 20px; }
+  .card {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 28px;
+    backdrop-filter: blur(10px);
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .card:hover { transform: translateY(-4px); border-color: var(--accent); }
+  .card .icon { font-size: 36px; margin-bottom: 12px; }
+  .card h3 { color: var(--text); font-size: 18px; margin-bottom: 8px; }
+  .card p { font-size: 15px; }
+
+  /* ── Stats Row ── */
+  .stats { display: flex; gap: 30px; margin: 30px 0; flex-wrap: wrap; }
+  .stat {
+    text-align: center;
+    flex: 1;
+    min-width: 140px;
+    padding: 24px;
+    background: rgba(30, 41, 59, 0.6);
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .stat .value { font-size: 42px; font-weight: 800; color: var(--accent-light); }
+  .stat .label { font-size: 13px; color: var(--muted); margin-top: 6px; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* ── Table ── */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 16px; }
+  th { background: rgba(59, 130, 246, 0.2); color: var(--accent-light); padding: 14px 16px; text-align: left; font-weight: 600; border-bottom: 2px solid rgba(59,130,246,0.3); }
+  td { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  tr:hover td { background: rgba(59,130,246,0.05); }
+
+  .highlight { color: var(--green); font-weight: 700; }
+
+  /* ── Navigation ── */
+  .nav-hint {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 13px;
+    color: var(--muted);
+    opacity: 0.6;
+    z-index: 100;
+  }
+
+  /* ── Cover special ── */
+  .cover-slide {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 40%, #0f172a 100%);
+    text-align: center;
+    align-items: center;
+  }
+  .cover-slide h1 { font-size: 64px; background: linear-gradient(135deg, #60a5fa, #a78bfa, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .cover-slide .divider { width: 100px; height: 3px; background: linear-gradient(90deg, var(--accent), var(--purple)); margin: 30px auto; border-radius: 2px; }
+
+  /* ── Thank You ── */
+  .thankyou h1 { font-size: 72px; background: linear-gradient(135deg, #34d399, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+  /* two-col layout */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: start; }
+</style>
+</head>
+<body>
+
+<!-- ═══ SLIDE 1: COVER ═══ -->
+<div class="slide cover-slide active" id="s1">
+  <p style="font-size:14px; letter-spacing:4px; text-transform:uppercase; color:var(--muted); margin-bottom:30px;">Brainybeam Info-Tech Pvt. Ltd.</p>
+  <h1>Bank Campaign Sense</h1>
+  <p class="subtitle">Predicting Term Deposit Subscriptions Using Machine Learning</p>
+  <div class="divider"></div>
+  <p style="font-size:18px; color:var(--muted); line-height:2;">
+    <strong style="color:var(--text);">Ayush Gajjar</strong> · LJ University<br>
+    Domain: Data Science &amp; ML · May 2026
+  </p>
+  <span class="slide-number">1 / 11</span>
+</div>
+
+<!-- ═══ SLIDE 2: PROBLEM ═══ -->
+<div class="slide" id="s2">
+  <h2>Problem Statement</h2>
+  <div class="two-col">
+    <div>
+      <p style="font-size:21px; margin-bottom:24px;">
+        Banks spend millions on telemarketing campaigns — but most calls go to customers who <strong style="color:#f87171;">won't subscribe</strong>.
+      </p>
+      <h3>Our Goal</h3>
+      <ul>
+        <li>Predict which customers will subscribe to a term deposit</li>
+        <li>Reduce wasted call-center resources</li>
+        <li>Increase campaign conversion rates</li>
+        <li>Provide actionable business insights</li>
+      </ul>
+    </div>
+    <div class="stats" style="flex-direction:column;">
+      <div class="stat"><div class="value">11,162</div><div class="label">Customer Records</div></div>
+      <div class="stat"><div class="value">17</div><div class="label">Features</div></div>
+      <div class="stat"><div class="value">8</div><div class="label">ML Models Compared</div></div>
+    </div>
+  </div>
+  <span class="branding">Bank Campaign Sense · Ayush Gajjar</span>
+  <span class="slide-number">2 / 11</span>
+</div>
+
+<!-- ═══ SLIDE 3: DATASET ═══ -->
+<div class="slide" id="s3">
+  <h2>Dataset Overview</h2>
+  <p style="margin-bottom:20px;">Portuguese banking institution's direct marketing campaign data with customer demographics, financials, and contact history.</p>
+  <div class="cards">
+    <div class="card"><div class="icon">👤</div><h3>Demographics</h3><p>Age, Job, Marital Status, Education Level</p></div>
+    <div class="card"><div class="icon">💰</div><h3>Financial</h3><p>Account Balance, Housing Loan, Personal Loan, Default Status</p></div>
+    <div class="card"><div class="icon">📞</div><h3>Campaign Contact</h3><p>Contact Type, Duration, Day/Month, Number of Contacts</p></div>
+    <div class="card"><div class="icon">🎯</div><h3>Target Variable</h3><p><span class="highlight">deposit</span> — Did the customer subscribe? (yes/no)</p></div>
+  </div>
+  <span class="branding">Bank Campaign Sense · Ayush Gajjar</span>
+  <span class="slide-number">3 / 11</span>
+</div>
+
+<!-- ═══ SLIDE 4: METHODOLOGY ═══ -->
+<div class="slide" id="s4">
+  <h2>Methodology</h2>
+  <div class="cards" style="grid-template-columns: repeat(4, 1fr);">
+    <div class="card" style="text-align:center; border-top:3px solid var(--accent);">
+      <div class="icon">🧹</div>
+      <h3>1. Data Cleaning</h3>
+      <p>Remove duplicates, handle unknowns, validate types</p>
+    </div>
+    <div class="card" style="text-align:center; border-top:3px solid var(--green);">
+      <div class="icon">📊</div>
+      <h3>2. EDA</h3>
+      <p>Distributions, correlations, target analysis</p>
+    </div>
+    <div class="card" style="text-align:center; border-top:3px solid var(--orange);">
+      <div class="icon">⚙️</div>
+      <h3>3. Preprocessing</h3>
+      <p>One-hot encoding, scaling, 80/20 stratified split</p>
+    </div>
+    <div class="card" style="text-align:center; border-top:3px solid var(--purple);">
+      <div class="icon">🤖</div>
+      <h3>4. Modeling</h3>
+      <p>Train &amp; compare 8 classification algorithms</p>
+    </div>
+  </div>
+  <div style="margin-top:30px;">
+    <h3>Tools &amp; Technologies</h3>
+    <p><strong style="color:var(--text);">Python</strong> · Pandas · NumPy · Scikit-learn · XGBoost · Matplotlib · Seaborn · <strong style="color:var(--text);">Power BI</strong></p>
+  </div>
+  <span class="branding">Bank Campaign Sense · Ayush Gajjar</span>
+  <span class="slide-number">4 / 11</span>
+</div>
+
+<!-- ═══ SLIDE 5: EDA INSIGHTS ═══ -->
+<div class="slide" id="s5">
+  <h2>Key EDA Insights</h2>
+  <div class="two-col">
+    <div>
+      <ul>
+        <li><strong style="color:var(--text)">Near-balanced target</strong> — ~47% yes vs ~53% no</li>
+        <li><strong style="color:var(--text)">Age:</strong> Bell-shaped, majority 25–55 years</li>
+        <li><strong style="color:var(--text)">Balance:</strong> Right-skewed, most ₹0–₹2,000</li>
+        <li><strong style="color:var(--text)">Duration:</strong> Strongest correlation with subscription</li>
+        <li><strong style="color:var(--text)">Job Type:</strong> Management &amp; retired convert most</li>
+        <li><strong style="color:var(--text)">Education:</strong> Tertiary-educated respond better</li>
+      </ul>
+    </div>
+    <div>
+      <div class="card" style="border-left:4px solid var(--green);">
+        <h3 style="color:var(--green);">Critical Finding</h3>
+        <p>Subscribers had <strong style="color:var(--text);">significantly longer</strong> average call durations — suggesting engagement level is a key predictor.</p>
+      </div>
+      <div class="card" style="margin-top:20px; border-left:4px solid var(--orange);">
+        <h3 style="color:var(--orange);">Correlation Insight</h3>
+        <p><code style="background:rgba(255,255,255,0.1); padding:3px 8px; border-radius:4px; color:var(--orange);">duration</code> has the highest positive correlation with the target variable among all features.</p>
+      </div>
+    </div>
+  </div>
+  <span class="branding">Bank Campaign Sense · Ayush Gajjar</span>
+  <span class="slide-number">5 / 11</span>
+</div>
+
+<!-- ═══ SLIDE 6: MODELS ═══ -->
+<div class="slide" id="s6">
+  <h2>Models Trained</h2>
+  <table>
+    <tr><th>#</th><th>Algorithm</th><th>Type</th><th>Key Config</th></tr>
+    <tr><td>1</td><td>Logistic Regression</td><td>Linear</td><td>max_iter=1000</td></tr>
+    <tr><td>2</td><td>Decision Tree</td><td>Tree-Based</td><td>max_depth=6</td></tr>
+    <tr><td>3</td><td>Random Forest</td><td>Ensemble (Bagging)</td><td>100 estimators</td></tr>
+    <tr><td>4</td><td>K-Nearest Neighbors</td><td>Instance-Based</td><td>k=7</td></tr>
+    <tr><td>5</td><td>Gaussian Naive Bayes</td><td>Probabilistic</td><td>Default priors</td></tr>
+    <tr><td>6</td><td>AdaBoost</td><td>Ensemble (Boosting)</td><td>100 estimators</td></tr>
+    <tr><td>7</td><td>Gradient Boosting</td><td>Ensemble (Boosting)</td><td>100 estimators</td></tr>
+    <tr><td>8</td><td>XGBoost</td><td>Ensemble (Boosting)</td><td>100 estimators, logloss</td></tr>
+  </table>
+  <span class="branding">Bank Campaign Sense · Ayush Gajjar</span>
+  <span class="slide-number">6 / 11</span>
+</div>
+
+<!-- ═══ SLIDE 7: RESULTS ═══ -->
+<div class="slide" id="s7">
+  <h2>Comparative Results</h2>
+  <p style="margin-bottom:16px;">Models ranked by <strong style="color:var(--green);">F1-Score</strong> — balancing precision and recall.</p>
+  <table>
+    <tr><th>Rank</th><th>Model</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th style="color:var(--green);">F1-Score</th></tr>
+    <tr style="background:rgba(52,211,153,0.08);"><td>🥇</td><td><strong>Gradient Boosting</strong></td><td>~82%</td><td>~81%</td><td>~81%</td><td class="highlight">~81%</td></tr>
+    <tr><td>🥈</td><td>XGBoost</td><td>~81%</td><td>~80%</td><td>~81%</td><td>~80%</td></tr>
+    <tr><td>🥉</td><td>Random Forest</td><td>~80%</td><td>~80%</td><td>~79%</td><td>~79%</td></tr>
+    <tr><td>4</td><td>AdaBoost</td><td>~79%</td><td>~79%</td><td>~78%</td><td>~78%</td></tr>
+    <tr><td>5</td><td>Logistic Regression</td><td>~78%</td><td>~78%</td><td>~77%</td><td>~77%</td></tr>
+    <tr><td>6</td><td>KNN</td><td>~77%</td><td>~77%</td><td>~76%</td><td>~76%</td></tr>
+    <tr><td>7</td><td>Decision Tree</td><td>~76%</td><td>~76%</td><td>~75%</td><td>~75%</td></tr>
+    <tr><td>8</td><td>Naive Bayes</td><td>~74%</td><td>~75%</td><td>~73%</td><td>~73%</td></tr>
+  </table>
+  <p style="font-size:14px; color:var(--muted);"><em>Approximate values — run notebook for exact metrics.</em></p>
+  <span class="branding">Bank Campaign Sense · Ayush Gajjar</span>
+  <span class="slide-number">7 / 11</span>
+</div>
+
+<!-- ═══ SLIDE 8: FEATURE IMPORTANCE ═══ -->
+<div class="slide" id="s8">
+  <h2>Top Predictors</h2>
+  <p style="margin-bottom:20px;">Random Forest feature importance — the factors that drive subscription decisions.</p>
+  <div class="two-col">
+    <div>
+      <ul>
+        <li><strong style="color:var(--green);">🥇 duration</strong> — Call length is #1 predictor</li>
+        <li><strong style="color:var(--accent-light);">🥈 balance</strong> — Wealthier customers convert more</li>
+        <li><strong style="color:var(--orange);">🥉 age</strong> — Older demographics more receptive</li>
+        <li><strong style="color:var(--text);">4. day</strong> — Timing of contact matters</li>
+        <li><strong style="color:var(--text);">5. campaign</strong> — Contact frequency effect</li>
+      </ul>
+    </div>
+    <div>
+      <ul>
+        <li><strong style="color:var(--text);">6. pdays</strong> — Recency of prior contact</li>
+        <li><strong style="color:var(--text);">7. previous</strong> — Prior contact volume</li>
+        <li><strong style="color:var(--purple);">8. poutcome_success</strong> — Past wins predict future wins</li>
+        <li><strong style="color:var(--text);">9. housing_yes</strong> — Loan status indicator</li>
+        <li><strong style="color:var(--text);">10. job_management</strong> — Job type signal</li>
+      </ul>
+    </div>
+  </div>
+  <span class="branding">Bank Campaign Sense · Ayush Gajjar</span>
+  <span class="slide-number">8 / 11</span>
+</div>
+
+<!-- ═══ SLIDE 9: INTERACTIVE DASHBOARD ═══ -->
+<div class="slide" id="s9">
+  <h2>Interactive Web Dashboard</h2>
+  <p style="margin-bottom:20px;">A self-contained browser tool for real-time analysis and prediction.</p>
+  <div class="cards" style="grid-template-columns: 1fr 1fr; margin-top:20px;">
+    <div class="card" style="border-top:4px solid var(--accent-light);">
+      <div class="icon">📊</div>
+      <h3>Visual Data Insights</h3>
+      <p>Dynamic charts exploring Target Distribution, Parameter Statistics, Age & Balance distributions, and Model Comparisons.</p>
+    </div>
+    <div class="card" style="border-top:4px solid var(--green);">
+      <div class="icon">🔮</div>
+      <h3>Batch & Manual Prediction</h3>
+      <p>Includes a <strong>Bulk Scanner</strong> for scoring multiple clients via CSV/Excel upload and a <strong>Manual Form</strong> for real-time lead prediction.</p>
+    </div>
+  </div>
+  <div class="card" style="margin-top:20px; background:rgba(255,255,255,0.02);">
+    <p style="font-size:16px; color:var(--muted);"><strong style="color:var(--text);">Tech Stack:</strong> HTML, CSS (Glassmorphism), Vanilla JS, Chart.js, SheetJS.</p>
+  </div>
+  <span class="branding">Bank Campaign Sense · Ayush Gajjar</span>
+  <span class="slide-number">9 / 11</span>
+</div>
+
+<!-- ═══ SLIDE 10: RECOMMENDATIONS ═══ -->
+<div class="slide" id="s10">
+  <h2>Business Recommendations</h2>
+  <div class="cards" style="grid-template-columns: repeat(3, 1fr); margin-top:10px;">
+    <div class="card" style="border-top:4px solid var(--green);">
+      <div class="icon">🎯</div>
+      <h3>Target High-Value Customers</h3>
+      <p>Prioritise customers with higher account balances — they are significantly more likely to convert.</p>
+    </div>
+    <div class="card" style="border-top:4px solid var(--accent);">
+      <div class="icon">🔄</div>
+      <h3>Re-Target Past Successes</h3>
+      <p>Customers with prior positive campaign outcomes (<code style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:3px;">poutcome_success</code>) show dramatically higher conversion.</p>
+    </div>
+    <div class="card" style="border-top:4px solid var(--purple);">
+      <div class="icon">⏱️</div>
+      <h3>Optimise Call Strategy</h3>
+      <p>Longer, quality conversations drive subscriptions. Train agents to engage, not rush.</p>
+    </div>
+  </div>
+  <div class="card" style="margin-top:24px; border-left:4px solid var(--green); max-width:100%;">
+    <h3 style="color:var(--green);">Projected Impact</h3>
+    <p>Implementing ML-driven lead scoring can <strong style="color:var(--text);">reduce call-center costs by up to 40%</strong> while improving campaign conversion rates through targeted outreach.</p>
+  </div>
+  <span class="branding">Bank Campaign Sense · Ayush Gajjar</span>
+  <span class="slide-number">10 / 11</span>
+</div>
+
+<!-- ═══ SLIDE 11: THANK YOU ═══ -->
+<div class="slide cover-slide thankyou" id="s11">
+  <h1>Thank You</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Bank Campaign Sense — Predicting Term Deposit Subscriptions</p>
+  <div style="margin-top:30px;">
+    <p style="font-size:20px; color:var(--text); font-weight:600;">Ayush Gajjar</p>
+    <p style="font-size:16px; color:var(--muted);">LJ University · Brainybeam Info-Tech Pvt. Ltd.</p>
+    <p style="font-size:14px; color:var(--muted); margin-top:10px;">May 2026</p>
+  </div>
+  <span class="slide-number">10 / 11</span>
+</div>
+
+<div class="nav-hint">← → Arrow Keys or Click to Navigate</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let current = 0;
+
+  function showSlide(n) {
+    slides[current].classList.remove('active');
+    current = (n + slides.length) % slides.length;
+    slides[current].classList.add('active');
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); showSlide(current + 1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); showSlide(current - 1); }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (e.clientX > window.innerWidth / 2) showSlide(current + 1);
+    else showSlide(current - 1);
+  });
+</script>
+</body>
+</html>

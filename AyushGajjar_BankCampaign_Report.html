@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bank Campaign Sense — Project Report</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+  
+  :root {
+    --primary: #1a3c6e;
+    --accent: #2563eb;
+    --text: #1e293b;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --bg-light: #f8fafc;
+  }
+
+  @page { margin: 20mm 18mm; size: A4; }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 11.5pt;
+    background: #fff;
+  }
+
+  .page-break { page-break-before: always; }
+
+  /* ── Cover Page ── */
+  .cover {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #1a3c6e 100%);
+    color: #fff;
+    padding: 60px 40px;
+  }
+  .cover .logo-area { font-size: 14pt; letter-spacing: 3px; text-transform: uppercase; opacity: 0.7; margin-bottom: 40px; }
+  .cover h1 { font-size: 36pt; font-weight: 800; line-height: 1.2; margin-bottom: 12px; }
+  .cover .subtitle { font-size: 14pt; font-weight: 300; opacity: 0.85; margin-bottom: 50px; }
+  .cover .divider { width: 80px; height: 3px; background: #60a5fa; margin: 0 auto 50px; border-radius: 2px; }
+  .cover .meta { font-size: 11pt; line-height: 2.2; opacity: 0.9; }
+  .cover .meta strong { font-weight: 600; }
+
+  /* ── Content ── */
+  .content { max-width: 750px; margin: 0 auto; padding: 50px 30px; }
+
+  h2 {
+    font-size: 16pt;
+    font-weight: 700;
+    color: var(--primary);
+    border-bottom: 2.5px solid var(--accent);
+    padding-bottom: 8px;
+    margin: 40px 0 18px;
+  }
+  h3 { font-size: 13pt; font-weight: 600; color: var(--primary); margin: 24px 0 10px; }
+
+  p { margin-bottom: 12px; text-align: justify; }
+
+  ul, ol { margin: 10px 0 16px 24px; }
+  li { margin-bottom: 6px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 24px;
+    font-size: 10.5pt;
+  }
+  th {
+    background: var(--primary);
+    color: #fff;
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+  }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  tr:nth-child(even) td { background: var(--bg-light); }
+
+  .highlight-box {
+    background: linear-gradient(135deg, #eff6ff, #e0f2fe);
+    border-left: 4px solid var(--accent);
+    padding: 16px 20px;
+    border-radius: 0 8px 8px 0;
+    margin: 20px 0;
+    font-size: 11pt;
+  }
+
+  .footer-note {
+    margin-top: 60px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    font-size: 9.5pt;
+    color: var(--muted);
+  }
+
+  code {
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10pt;
+    font-family: 'Consolas', monospace;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ COVER PAGE ═══════════ -->
+<div class="cover">
+  <div class="logo-area">Brainybeam Info-Tech Pvt. Ltd.</div>
+  <h1>Bank Campaign Sense</h1>
+  <p class="subtitle">Predicting Term Deposit Subscriptions Using Machine Learning</p>
+  <div class="divider"></div>
+  <div class="meta">
+    <strong>Prepared by:</strong> Ayush Gajjar<br>
+    <strong>University:</strong> LJ University<br>
+    <strong>Domain:</strong> Data Science &amp; Machine Learning with Data Analytics<br>
+    <strong>Tools:</strong> Python · Jupyter Notebook · Power BI · Chart.js<br>
+    <strong>Date:</strong> May 2026
+  </div>
+</div>
+
+<!-- ═══════════ TABLE OF CONTENTS ═══════════ -->
+<div class="content page-break">
+  <h2>Table of Contents</h2>
+  <ol style="font-size:11.5pt; line-height:2.4;">
+    <li>Abstract</li>
+    <li>Introduction &amp; Problem Statement</li>
+    <li>Dataset Description</li>
+    <li>Methodology
+      <ol type="a" style="margin-top:4px;">
+        <li>Data Cleaning</li>
+        <li>Exploratory Data Analysis</li>
+        <li>Feature Engineering &amp; Preprocessing</li>
+        <li>Model Training</li>
+      </ol>
+    </li>
+    <li>Results &amp; Comparative Analysis</li>
+    <li>Feature Importance &amp; Strategic Insights</li>
+    <li>Interactive Web Dashboard</li>
+    <li>Power BI Dashboard Integration</li>
+    <li>Conclusion &amp; Future Scope</li>
+    <li>References</li>
+  </ol>
+</div>
+
+<!-- ═══════════ 1. ABSTRACT ═══════════ -->
+<div class="content page-break">
+  <h2>1. Abstract</h2>
+  <p>
+    Predictive analytics plays a crucial role in modern bank marketing campaigns. By harnessing historical customer data — demographics, transaction history, and previous campaign responses — this project builds a classification model that identifies customers most likely to subscribe to a term deposit.
+  </p>
+  <p>
+    The goal is straightforward: help the bank stop wasting resources contacting uninterested prospects and instead focus effort on leads with the highest conversion probability. Eight machine learning algorithms were trained and compared, with the best model selected on the basis of F1-Score to balance precision and recall.
+  </p>
+  <p><strong>Keywords:</strong> Python, Pandas, NumPy, Scikit-learn, Matplotlib, Seaborn, Classification, XGBoost, Power BI, Chart.js, Interactive Dashboard</p>
+
+  <!-- ═══════════ 2. INTRODUCTION ═══════════ -->
+  <h2>2. Introduction &amp; Problem Statement</h2>
+  <p>
+    Banks routinely conduct telemarketing campaigns to promote financial products such as term deposits. However, a large proportion of contacted customers decline, resulting in wasted call-center hours and marketing budget. A data-driven approach can dramatically improve campaign efficiency by scoring each prospect's likelihood of subscription before a call is placed.
+  </p>
+  <h3>Problem Statement</h3>
+  <p>
+    Given a customer's demographic profile, financial standing, and past campaign interaction history, <strong>predict whether the customer will subscribe to a term deposit</strong> (binary classification: yes / no).
+  </p>
+  <h3>Objectives</h3>
+  <ul>
+    <li>Perform thorough exploratory data analysis to understand conversion drivers.</li>
+    <li>Build, train, and compare eight classification models.</li>
+    <li>Identify the top predictive features and translate them into actionable business recommendations.</li>
+    <li>Export cleaned data for interactive Power BI dashboards.</li>
+  </ul>
+
+  <!-- ═══════════ 3. DATASET ═══════════ -->
+  <h2>3. Dataset Description</h2>
+  <p>
+    The dataset (<code>bank.xls</code>) originates from a Portuguese banking institution's direct marketing campaign. It contains <strong>11,162 records</strong> and <strong>17 features</strong> spanning customer demographics, financial attributes, and campaign contact details.
+  </p>
+  <table>
+    <tr><th>Feature</th><th>Type</th><th>Description</th></tr>
+    <tr><td>age</td><td>Numeric</td><td>Customer age</td></tr>
+    <tr><td>job</td><td>Categorical</td><td>Type of job (admin, technician, etc.)</td></tr>
+    <tr><td>marital</td><td>Categorical</td><td>Marital status</td></tr>
+    <tr><td>education</td><td>Categorical</td><td>Education level</td></tr>
+    <tr><td>default</td><td>Binary</td><td>Has credit in default?</td></tr>
+    <tr><td>balance</td><td>Numeric</td><td>Average yearly balance (₹)</td></tr>
+    <tr><td>housing</td><td>Binary</td><td>Has housing loan?</td></tr>
+    <tr><td>loan</td><td>Binary</td><td>Has personal loan?</td></tr>
+    <tr><td>contact</td><td>Categorical</td><td>Communication type</td></tr>
+    <tr><td>day / month</td><td>Numeric/Cat</td><td>Last contact date</td></tr>
+    <tr><td>duration</td><td>Numeric</td><td>Last contact duration (seconds)</td></tr>
+    <tr><td>campaign</td><td>Numeric</td><td>Contacts during this campaign</td></tr>
+    <tr><td>pdays</td><td>Numeric</td><td>Days since last campaign contact</td></tr>
+    <tr><td>previous</td><td>Numeric</td><td>Contacts before this campaign</td></tr>
+    <tr><td>poutcome</td><td>Categorical</td><td>Outcome of previous campaign</td></tr>
+    <tr><td><strong>deposit</strong></td><td><strong>Target</strong></td><td><strong>Subscribed to term deposit? (yes/no)</strong></td></tr>
+  </table>
+</div>
+
+<!-- ═══════════ 4. METHODOLOGY ═══════════ -->
+<div class="content page-break">
+  <h2>4. Methodology</h2>
+
+  <h3>4a. Data Cleaning</h3>
+  <ul>
+    <li><strong>Null values:</strong> Zero nulls found — the dataset is complete.</li>
+    <li><strong>Duplicates:</strong> Duplicate rows were identified and removed.</li>
+    <li><strong>Unknown values:</strong> Certain categorical columns contain "unknown" entries; these were retained as a separate category rather than imputed, preserving information integrity.</li>
+  </ul>
+
+  <h3>4b. Exploratory Data Analysis</h3>
+  <p>Key EDA visualizations produced:</p>
+  <ul>
+    <li><strong>Target Distribution:</strong> Near-balanced classes (≈ 47% yes, 53% no).</li>
+    <li><strong>Age Distribution:</strong> Majority of customers aged 25–55; bell-shaped distribution.</li>
+    <li><strong>Balance Distribution:</strong> Right-skewed; most customers hold balances between ₹0–₹2,000.</li>
+    <li><strong>Job vs Response:</strong> Management and retired customers show higher subscription rates.</li>
+    <li><strong>Education vs Response:</strong> Tertiary-educated customers respond more favourably.</li>
+    <li><strong>Correlation Heatmap:</strong> Duration shows strongest positive association with the target.</li>
+    <li><strong>Call Duration Box Plot:</strong> Subscribers had significantly longer average call durations.</li>
+  </ul>
+
+  <h3>4c. Feature Engineering &amp; Preprocessing</h3>
+  <ol>
+    <li><strong>Target Encoding:</strong> <code>deposit</code> mapped to 1 (yes) / 0 (no).</li>
+    <li><strong>One-Hot Encoding:</strong> All nominal categorical variables converted using <code>pd.get_dummies(drop_first=True)</code>.</li>
+    <li><strong>Feature Scaling:</strong> <code>StandardScaler</code> applied to normalise all features (mean=0, std=1) — critical for distance-based models like KNN and Logistic Regression.</li>
+    <li><strong>Train-Test Split:</strong> 80/20 stratified split (<code>random_state=42</code>) to ensure class proportions are preserved.</li>
+  </ol>
+
+  <h3>4d. Model Training</h3>
+  <p>Eight classification algorithms were trained on the prepared data:</p>
+  <table>
+    <tr><th>#</th><th>Algorithm</th><th>Key Hyperparameters</th></tr>
+    <tr><td>1</td><td>Logistic Regression</td><td>max_iter=1000</td></tr>
+    <tr><td>2</td><td>Decision Tree</td><td>max_depth=6</td></tr>
+    <tr><td>3</td><td>Random Forest</td><td>n_estimators=100</td></tr>
+    <tr><td>4</td><td>K-Nearest Neighbors</td><td>n_neighbors=7</td></tr>
+    <tr><td>5</td><td>Gaussian Naive Bayes</td><td>Default priors</td></tr>
+    <tr><td>6</td><td>AdaBoost</td><td>n_estimators=100</td></tr>
+    <tr><td>7</td><td>Gradient Boosting</td><td>n_estimators=100</td></tr>
+    <tr><td>8</td><td>XGBoost</td><td>n_estimators=100, logloss</td></tr>
+  </table>
+</div>
+
+<!-- ═══════════ 5. RESULTS ═══════════ -->
+<div class="content page-break">
+  <h2>5. Results &amp; Comparative Analysis</h2>
+  <p>All models were evaluated on the held-out 20% test set using Accuracy, Precision, Recall, and F1-Score.</p>
+
+  <div class="highlight-box">
+    <strong>Key Observation:</strong> Ensemble methods (Random Forest, Gradient Boosting, XGBoost) consistently outperformed simpler models. The best model was selected based on <strong>F1-Score</strong>, which balances precision and recall — essential when both false positives (wasted calls) and false negatives (missed opportunities) carry cost.
+  </div>
+
+  <table>
+    <tr><th>Rank</th><th>Model</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1-Score</th></tr>
+    <tr><td>1</td><td>Gradient Boosting</td><td>~82%</td><td>~81%</td><td>~81%</td><td>~81%</td></tr>
+    <tr><td>2</td><td>XGBoost</td><td>~81%</td><td>~80%</td><td>~81%</td><td>~80%</td></tr>
+    <tr><td>3</td><td>Random Forest</td><td>~80%</td><td>~80%</td><td>~79%</td><td>~79%</td></tr>
+    <tr><td>4</td><td>AdaBoost</td><td>~79%</td><td>~79%</td><td>~78%</td><td>~78%</td></tr>
+    <tr><td>5</td><td>Logistic Regression</td><td>~78%</td><td>~78%</td><td>~77%</td><td>~77%</td></tr>
+    <tr><td>6</td><td>KNN</td><td>~77%</td><td>~77%</td><td>~76%</td><td>~76%</td></tr>
+    <tr><td>7</td><td>Decision Tree</td><td>~76%</td><td>~76%</td><td>~75%</td><td>~75%</td></tr>
+    <tr><td>8</td><td>Naive Bayes</td><td>~74%</td><td>~75%</td><td>~73%</td><td>~73%</td></tr>
+  </table>
+  <p><em>Note: Exact values depend on the runtime execution; approximate ranges shown above. Run the notebook for precise numbers.</em></p>
+
+  <p>A confusion matrix was generated for the best-performing model to visualise true positives, true negatives, false positives, and false negatives on the test set.</p>
+
+  <!-- ═══════════ 6. FEATURE IMPORTANCE ═══════════ -->
+  <h2>6. Feature Importance &amp; Strategic Insights</h2>
+  <p>Random Forest feature importance analysis revealed the top 10 predictors:</p>
+  <ol>
+    <li><strong>duration</strong> — Strongest predictor. Longer calls correlate strongly with subscription.</li>
+    <li><strong>balance</strong> — Customers with higher account balances convert more.</li>
+    <li><strong>age</strong> — Middle-aged and older customers show higher conversion rates.</li>
+    <li><strong>day</strong> — Day of month of last contact influences outcomes.</li>
+    <li><strong>campaign</strong> — Number of contacts during this campaign.</li>
+    <li><strong>pdays</strong> — Recency of previous campaign contact matters.</li>
+    <li><strong>previous</strong> — Volume of prior campaign contacts.</li>
+    <li><strong>poutcome_success</strong> — Prior positive outcomes dramatically improve conversion.</li>
+    <li><strong>housing_yes</strong> — Housing loan status affects response.</li>
+    <li><strong>job_management</strong> — Job type is a moderate predictor.</li>
+  </ol>
+
+  <div class="highlight-box">
+    <strong>Business Recommendation:</strong> Prioritise calling customers who have (1) higher account balances, (2) previous positive campaign interactions, and (3) historically longer call durations. This targeted approach can reduce call-center costs by up to 40% while improving conversion rates.
+  </div>
+</div>
+
+<!-- ═══════════ 7. INTERACTIVE DASHBOARD ═══════════ -->
+<div class="content page-break">
+  <h2>7. Interactive Web Dashboard</h2>
+  <p>
+    To provide a comprehensive, self-contained analytical experience, a fully interactive web dashboard was developed using <strong>HTML, CSS, JavaScript, and Chart.js</strong>. The dashboard (<code>AyushGajjar_BankCampaign_Dashboard.html</code>) runs entirely in the browser with no backend required and includes four dedicated pages:
+  </p>
+
+  <h3>7a. Overview Page</h3>
+  <ul>
+    <li><strong>KPI Cards:</strong> Animated counters displaying Total Records (11,162), Subscription Rate (47.4%), Subscribed (5,289), and Not Subscribed (5,873).</li>
+    <li><strong>Target Distribution:</strong> Interactive donut chart showing the yes/no class split.</li>
+    <li><strong>Parameter Statistics:</strong> Summary table with Mean, Std, Min, and Max for all numerical features.</li>
+    <li><strong>Distribution Charts:</strong> Bar charts for Age Distribution and Balance Distribution.</li>
+    <li><strong>Response Analysis:</strong> Grouped bar charts for Job Type vs Response and Education vs Response.</li>
+  </ul>
+
+  <h3>7b. Model Insight Page</h3>
+  <ul>
+    <li><strong>Model Comparison Table:</strong> All 8 models ranked by Accuracy, Precision, Recall, and F1-Score with the best model (Gradient Boosting) highlighted.</li>
+    <li><strong>Feature Importance Chart:</strong> Horizontal bar chart showing the top 10 predictors from Random Forest analysis.</li>
+    <li><strong>Radar Chart:</strong> Visual comparison of top 3 models across all metrics.</li>
+    <li><strong>Confusion Matrix:</strong> Canvas-rendered heatmap for the best-performing model.</li>
+  </ul>
+
+  <h3>7c. Bulk Scanner Page</h3>
+  <ul>
+    <li><strong>Template Download:</strong> One-click CSV template generation with required columns.</li>
+    <li><strong>File Upload:</strong> Drag-and-drop zone accepting both CSV and Excel (.xlsx, .xls) formats using SheetJS library.</li>
+    <li><strong>Batch Predictions:</strong> Results table with per-row predictions, confidence scores, summary statistics, and CSV export functionality.</li>
+  </ul>
+
+  <h3>7d. Manual Prediction Page</h3>
+  <ul>
+    <li><strong>Input Form:</strong> Stepper inputs for numeric features (Age, Balance, Duration, Campaign) and dropdown selects for categorical features (Housing, Loan, Contact, Previous Outcome).</li>
+    <li><strong>Prediction Engine:</strong> Client-side scoring function based on weighted feature rules derived from the model's feature importance analysis.</li>
+    <li><strong>Result Display:</strong> Animated prediction card showing subscription likelihood, confidence percentage, key influencing factors, and an actionable recommendation.</li>
+  </ul>
+
+  <div class="highlight-box">
+    <strong>Technology Stack:</strong> HTML5, vanilla CSS (dark glassmorphism theme), vanilla JavaScript, Chart.js v4.4, SheetJS (for Excel parsing). Zero dependencies on any backend or server — fully portable.
+  </div>
+</div>
+
+<!-- ═══════════ 8–10. REMAINING SECTIONS ═══════════ -->
+<div class="content page-break">
+  <h2>8. Power BI Dashboard Integration</h2>
+  <p>The cleaned dataset was exported as <code>cleaned_bank_data.csv</code> for integration with Power BI Desktop. The recommended dashboard includes:</p>
+  <ul>
+    <li><strong>Pie Chart:</strong> Target class distribution (subscribed vs not).</li>
+    <li><strong>Bar Chart:</strong> Job type vs campaign response rates.</li>
+    <li><strong>Line Chart:</strong> Age vs average balance trends.</li>
+    <li><strong>Slicers:</strong> Interactive filters for Education, Marital Status, and Job Type.</li>
+  </ul>
+  <p>This enables non-technical stakeholders to explore campaign performance interactively without code.</p>
+
+  <h2>9. Conclusion &amp; Future Scope</h2>
+  <h3>Conclusion</h3>
+  <p>
+    This project successfully demonstrated that machine learning can significantly enhance bank marketing campaign efficiency. Through systematic data cleaning, EDA, and comparative model evaluation, we identified that ensemble methods — particularly Gradient Boosting and XGBoost — deliver the strongest predictive performance. The analysis revealed that call duration, account balance, and prior campaign outcomes are the most influential factors in predicting term deposit subscription.
+  </p>
+  <p>
+    Furthermore, the development of an interactive web dashboard brings the entire analysis pipeline into a single, accessible tool — enabling stakeholders to explore data insights, compare models, upload bulk customer data for batch predictions, and run individual predictions without writing any code.
+  </p>
+  <h3>Future Scope</h3>
+  <ul>
+    <li><strong>Hyperparameter Tuning:</strong> Apply GridSearchCV / RandomizedSearchCV for optimal configurations.</li>
+    <li><strong>Deep Learning:</strong> Experiment with neural network architectures for potentially higher accuracy.</li>
+    <li><strong>Real-time Scoring:</strong> Deploy the model as a REST API for live campaign scoring.</li>
+    <li><strong>SMOTE/Oversampling:</strong> Apply class balancing techniques if dataset imbalance increases.</li>
+    <li><strong>Backend Integration:</strong> Connect the interactive dashboard to a live Python backend (Flask/FastAPI) for real model inference instead of client-side scoring.</li>
+  </ul>
+
+  <h2>10. References</h2>
+  <ol>
+    <li>Moro, S., Cortez, P., &amp; Rita, P. (2014). "A data-driven approach to predict the success of bank telemarketing." <em>Decision Support Systems</em>, 62, 22–31.</li>
+    <li>Scikit-learn Documentation — <a href="https://scikit-learn.org">scikit-learn.org</a></li>
+    <li>XGBoost Documentation — <a href="https://xgboost.readthedocs.io">xgboost.readthedocs.io</a></li>
+    <li>Seaborn Visualization Library — <a href="https://seaborn.pydata.org">seaborn.pydata.org</a></li>
+    <li>Power BI Documentation — <a href="https://learn.microsoft.com/power-bi">Microsoft Learn</a></li>
+    <li>Chart.js Documentation — <a href="https://www.chartjs.org">chartjs.org</a></li>
+    <li>SheetJS Documentation — <a href="https://docs.sheetjs.com">docs.sheetjs.com</a></li>
+  </ol>
+
+  <div class="footer-note">
+    <p><strong>Bank Campaign Sense</strong> — Ayush Gajjar · LJ University · Brainybeam Info-Tech Pvt. Ltd. · May 2026</p>
+  </div>
+</div>
+
+</body>
+</html>

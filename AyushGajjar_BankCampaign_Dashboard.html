@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bank Campaign Sense — Interactive Dashboard</title>
+<meta name="description" content="AI-Powered Bank Campaign Prediction Dashboard by Ayush Gajjar — Model Insights, Bulk Scanner, Manual Prediction">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+
+<!-- ═══ TOP BAR ═══ -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-icon">🏦</div>
+    <div><h1>Bank Campaign Sense</h1><p>AI-Powered Term Deposit Prediction System</p></div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" data-tab="pgOverview" onclick="switchTab('pgOverview')"><span class="dot" style="background:#3b82f6"></span> Overview</div>
+    <div class="tab" data-tab="pgModel" onclick="switchTab('pgModel')"><span class="dot" style="background:#f87171"></span> Model Insight</div>
+    <div class="tab" data-tab="pgBulk" onclick="switchTab('pgBulk')"><span class="dot" style="background:#3b82f6"></span> Bulk Scanner</div>
+    <div class="tab" data-tab="pgPredict" onclick="switchTab('pgPredict')"><span class="dot" style="background:#34d399"></span> Predict Subscription</div>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ════════════ PAGE 1: OVERVIEW ════════════ -->
+<div class="page active" id="pgOverview">
+  <h2 class="section-title">Dataset Overview</h2>
+  <div class="kpi-row">
+    <div class="kpi"><div class="lbl">Total Records</div><div class="val" data-count="11162">0</div><div class="sub blue">↑ observations</div></div>
+    <div class="kpi"><div class="lbl">Subscription Rate</div><div class="val" data-count="47.4">0</div><div class="sub green">↑ % subscribed</div></div>
+    <div class="kpi"><div class="lbl">Subscribed (Yes)</div><div class="val" data-count="5289">0</div><div class="sub orange">↑ records</div></div>
+    <div class="kpi"><div class="lbl">Not Subscribed (No)</div><div class="val" data-count="5873">0</div><div class="sub red">↑ records</div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel"><h3>Target Distribution</h3><div class="chart-container"><canvas id="chartDonut"></canvas></div></div>
+    <div class="panel"><h3>Parameter Statistics</h3>
+      <table class="tbl">
+        <tr><th>Parameter</th><th>Mean</th><th>Std</th><th>Min</th><th>Max</th></tr>
+        <tr><td>Age</td><td>41.23</td><td>10.62</td><td>18</td><td>95</td></tr>
+        <tr><td>Balance (₹)</td><td>1528.54</td><td>3225.41</td><td>-6847</td><td>81204</td></tr>
+        <tr><td>Duration (s)</td><td>371.99</td><td>347.13</td><td>2</td><td>4918</td></tr>
+        <tr><td>Campaign</td><td>2.76</td><td>3.10</td><td>1</td><td>63</td></tr>
+        <tr><td>Pdays</td><td>51.33</td><td>108.76</td><td>-1</td><td>871</td></tr>
+        <tr><td>Previous</td><td>0.58</td><td>2.54</td><td>0</td><td>275</td></tr>
+        <tr><td>Day</td><td>15.92</td><td>8.25</td><td>1</td><td>31</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel"><h3>Age Distribution</h3><div class="chart-container"><canvas id="chartAge"></canvas></div></div>
+    <div class="panel"><h3>Balance Distribution</h3><div class="chart-container"><canvas id="chartBalance"></canvas></div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel"><h3>Job Type vs Campaign Response</h3><div class="chart-container tall"><canvas id="chartJob"></canvas></div></div>
+    <div class="panel"><h3>Education vs Campaign Response</h3><div class="chart-container"><canvas id="chartEdu"></canvas></div></div>
+  </div>
+</div>
+
+<!-- ════════════ PAGE 2: MODEL INSIGHT ════════════ -->
+<div class="page" id="pgModel">
+  <h2 class="section-title">Model Training & Evaluation</h2>
+
+  <div class="panel" style="margin-bottom:20px">
+    <h3>Model Comparison</h3>
+    <table class="tbl">
+      <tr><th>Model</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1-Score</th><th>Status</th></tr>
+      <tr><td>Logistic Regression</td><td>78.00%</td><td>78.00%</td><td>77.00%</td><td>77.00%</td><td></td></tr>
+      <tr><td>Decision Tree</td><td>76.00%</td><td>76.00%</td><td>75.00%</td><td>75.00%</td><td></td></tr>
+      <tr><td>Random Forest</td><td>80.00%</td><td>80.00%</td><td>79.00%</td><td>79.00%</td><td></td></tr>
+      <tr><td>KNN</td><td>77.00%</td><td>77.00%</td><td>76.00%</td><td>76.00%</td><td></td></tr>
+      <tr><td>Naive Bayes</td><td>74.00%</td><td>75.00%</td><td>73.00%</td><td>73.00%</td><td></td></tr>
+      <tr><td>AdaBoost</td><td>79.00%</td><td>79.00%</td><td>78.00%</td><td>78.00%</td><td></td></tr>
+      <tr style="background:rgba(52,211,153,.06)"><td><strong>Gradient Boosting</strong></td><td><strong>82.00%</strong></td><td><strong>81.00%</strong></td><td><strong>81.00%</strong></td><td><strong>81.00%</strong></td><td><span class="badge best">✅ Best</span></td></tr>
+      <tr><td>XGBoost</td><td>81.00%</td><td>80.00%</td><td>81.00%</td><td>80.00%</td><td></td></tr>
+    </table>
+  </div>
+
+  <div class="grid2">
+    <div class="panel"><h3>Feature Importance — Gradient Boosting</h3><div class="chart-container tall"><canvas id="chartFeatures"></canvas></div></div>
+    <div class="panel"><h3>Top 3 Models — Radar Comparison</h3><div class="chart-container tall"><canvas id="chartRadar"></canvas></div></div>
+  </div>
+
+  <div class="panel">
+    <h3>Confusion Matrix — Gradient Boosting (Best Model)</h3>
+    <div style="display:flex;justify-content:center"><canvas id="chartCM" width="360" height="300"></canvas></div>
+  </div>
+</div>
+
+<!-- ════════════ PAGE 3: BULK SCANNER ════════════ -->
+<div class="page" id="pgBulk">
+  <h2 class="section-title">Bulk Campaign Scanner</h2>
+  <p style="color:#94a3b8;margin-bottom:20px">Process multiple customer records at once — upload a CSV or Excel file and get batch subscription predictions.</p>
+
+  <div class="panel" style="margin-bottom:16px">
+    <h3>Step 1 — Download Template</h3>
+    <p style="color:#94a3b8;font-size:13px;margin-bottom:12px">Download the sample CSV to see the required column format.</p>
+    <button class="btn btn-outline" onclick="downloadTemplate()">⬇ Download Template CSV</button>
+  </div>
+
+  <div class="panel" style="margin-bottom:16px">
+    <h3>Step 2 — Upload Your CSV / Excel File</h3>
+    <p style="color:#94a3b8;font-size:13px;margin-bottom:8px">Required columns:
+      <span class="col-badge">age</span><span class="col-badge">job</span><span class="col-badge">marital</span><span class="col-badge">education</span><span class="col-badge">balance</span><span class="col-badge">duration</span><span class="col-badge">housing</span><span class="col-badge">loan</span><span class="col-badge">contact</span><span class="col-badge">campaign</span><span class="col-badge">poutcome</span>
+    </p>
+    <div class="upload-zone" id="uploadZone">
+      <p style="font-size:24px;margin-bottom:8px">📁</p>
+      <p>Browse or drag-and-drop your CSV or Excel (.xlsx, .xls) file here</p>
+    </div>
+    <input type="file" id="csvInput" accept=".csv,.xlsx,.xls,.xlsm" style="display:none">
+  </div>
+
+  <div id="bulkResults" style="display:none">
+    <div class="panel" style="margin-bottom:16px">
+      <h3>Step 3 — Prediction Results</h3>
+      <div class="results-summary" id="bulkSummary"></div>
+      <div style="margin:12px 0"><button class="btn btn-green" id="btnExport">⬇ Export Results CSV</button></div>
+      <div id="bulkTable" style="max-height:400px;overflow-y:auto"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ PAGE 4: MANUAL PREDICTION ════════════ -->
+<div class="page" id="pgPredict">
+  <h2 class="section-title">Predict Term Deposit Subscription</h2>
+  <div class="grid2">
+    <div class="panel">
+      <h3>Enter Customer Parameters</h3>
+      <div class="grid2" style="gap:12px">
+        <div class="form-group"><label>Age</label><div class="stepper"><input type="number" id="m_age" value="38" step="1"><button onclick="stepVal('m_age',-1)">−</button><button onclick="stepVal('m_age',1)">+</button></div></div>
+        <div class="form-group"><label>Balance (₹)</label><div class="stepper"><input type="number" id="m_balance" value="2000" step="100"><button onclick="stepVal('m_balance',-100)">−</button><button onclick="stepVal('m_balance',100)">+</button></div></div>
+        <div class="form-group"><label>Duration (seconds)</label><div class="stepper"><input type="number" id="m_duration" value="250" step="10"><button onclick="stepVal('m_duration',-10)">−</button><button onclick="stepVal('m_duration',10)">+</button></div></div>
+        <div class="form-group"><label>Campaign Contacts</label><div class="stepper"><input type="number" id="m_campaign" value="2" step="1"><button onclick="stepVal('m_campaign',-1)">−</button><button onclick="stepVal('m_campaign',1)">+</button></div></div>
+      </div>
+      <div class="grid2" style="gap:12px;margin-top:4px">
+        <div class="form-group"><label>Housing Loan</label><select id="m_housing"><option>yes</option><option>no</option></select></div>
+        <div class="form-group"><label>Personal Loan</label><select id="m_loan"><option>no</option><option>yes</option></select></div>
+        <div class="form-group"><label>Contact Type</label><select id="m_contact"><option>cellular</option><option>telephone</option><option>unknown</option></select></div>
+        <div class="form-group"><label>Previous Outcome</label><select id="m_poutcome"><option>unknown</option><option>success</option><option>failure</option><option>other</option></select></div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:16px;padding:14px" onclick="runPrediction()">🔮 Run Prediction</button>
+    </div>
+
+    <div class="panel" id="predResult">
+      <div class="pred-result">
+        <div class="icon-big">🏦</div>
+        <div style="color:#94a3b8;font-size:14px">Enter customer parameters and click<br><strong style="color:#f1f5f9">Run Prediction</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script src="dashboard.js"></script>
+</body>
+</html>
