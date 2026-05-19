@@ -85,42 +85,212 @@ if page == "Overview":
         
         st.markdown("---")
         
-        # Charts row 1
-        c1, c2 = st.columns(2)
-        with c1:
-            st.subheader("Target Distribution")
-            fig_donut = px.pie(df, names='deposit', color='deposit',
-                              color_discrete_map={'yes': '#34d399', 'no': '#3b82f6'},
-                              hole=0.6)
-            fig_donut.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="#94a3b8")
-            st.plotly_chart(fig_donut, use_container_width=True)
+        # Tabs
+        tab1, tab2, tab3 = st.tabs([
+            "📊 Executive Summary & EDA", 
+            "🔍 Demographic & Financial Deep-Dives", 
+            "🧠 ML Model Insights"
+        ])
+        
+        # ── Tab 1: Executive Summary & Dynamic Feature Explorer ──
+        with tab1:
+            st.subheader("Campaign Target Distribution")
             
-        with c2:
-            st.subheader("Parameter Statistics")
-            with st.expander("View Detailed Parameter Statistics"):
-                num_cols = df.select_dtypes(include=['number']).columns
-                stats = df[num_cols].describe().T[['mean', 'std', 'min', 'max']]
+            c1, c2 = st.columns([1, 2])
+            with c1:
+                fig_donut = px.pie(df, names='deposit', color='deposit',
+                                  color_discrete_map={'yes': '#34d399', 'no': '#f87171'},
+                                  hole=0.6)
+                fig_donut.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="#94a3b8", showlegend=True, margin=dict(t=10, b=10, l=10, r=10))
+                st.plotly_chart(fig_donut, use_container_width=True)
+            
+            with c2:
+                st.write("")
+                st.write("")
+                st.markdown(f"""
+                ### 📊 Key Performance Breakdown
+                * **Dataset Volume**: The dataset contains **{total_records:,}** historical bank client contacts.
+                * **Conversion Efficiency**: A term deposit subscription conversion rate of **{rate:.2f}%** indicates a robust baseline response, representing **{subscribed:,}** converted sales leads.
+                * **Actionability**: Using predictive analysis, the goal is to target the high-propensity segments and avoid cold-calling low-interest categories to optimize resource efficiency.
+                """)
+                
+            st.markdown("---")
+            st.subheader("🔍 Interactive Feature Explorer")
+            st.write("Select any parameter from the dataset to dynamically explore its distribution and response patterns among bank customers.")
+            
+            # Interactive feature selector
+            explorer_cols = [col for col in df.columns if col != 'deposit']
+            selected_feature = st.selectbox(
+                "Choose a feature to visualize:", 
+                explorer_cols, 
+                index=explorer_cols.index('age') if 'age' in explorer_cols else 0
+            )
+            
+            is_numeric = pd.api.types.is_numeric_dtype(df[selected_feature])
+            
+            if is_numeric:
+                fig_explorer = px.histogram(df, x=selected_feature, color='deposit',
+                                            barmode='overlay', opacity=0.75,
+                                            color_discrete_map={'yes': '#34d399', 'no': '#f87171'},
+                                            title=f"Numerical Distribution of {selected_feature.upper()} (Subscribed vs Not)")
+                fig_explorer.update_layout(
+                    paper_bgcolor='rgba(0,0,0,0)', 
+                    plot_bgcolor='rgba(0,0,0,0)', 
+                    font_color="#94a3b8",
+                    xaxis=dict(gridcolor='#1e293b'),
+                    yaxis=dict(gridcolor='#1e293b')
+                )
+                st.plotly_chart(fig_explorer, use_container_width=True)
+                
+                # Dynamic descriptive note based on selected numerical feature
+                if selected_feature == 'age':
+                    st.write("💡 *Note:* The age histogram reveals high conversions at two age extremities: younger age groups (under 25) and retirees/older clients (above 60), whereas the middle-aged cohort has higher absolute volume but lower relative conversion.")
+                elif selected_feature == 'balance':
+                    st.write("💡 *Note:* Most clients are clustered around lower balances, but clients with substantial positive balances (above 2,000) show a visibly higher relative rate of subscription.")
+                elif selected_feature == 'duration':
+                    st.write("💡 *Note:* This is the single strongest campaign driver. Call durations under 100 seconds rarely lead to conversion, while durations above 300 seconds have highly favorable conversion probabilities.")
+            else:
+                # Cross tab bar chart for categorical feature
+                feature_response = pd.crosstab(df[selected_feature], df['deposit']).reset_index()
+                fig_explorer = px.bar(feature_response, x=selected_feature, y=['no', 'yes'], barmode='group',
+                                      color_discrete_map={'yes': '#34d399', 'no': '#f87171'},
+                                      title=f"Campaign Success by Customer Category ({selected_feature.upper()})")
+                fig_explorer.update_layout(
+                    paper_bgcolor='rgba(0,0,0,0)', 
+                    plot_bgcolor='rgba(0,0,0,0)', 
+                    font_color="#94a3b8",
+                    xaxis=dict(gridcolor='#1e293b'),
+                    yaxis=dict(gridcolor='#1e293b')
+                )
+                st.plotly_chart(fig_explorer, use_container_width=True)
+                
+                # Dynamic descriptive note based on selected categorical feature
+                if selected_feature == 'job':
+                    st.write("💡 *Note:* Blue-collar, services, and management jobs represent high contact frequencies, but retired individuals and students have the highest positive-to-negative conversion rates.")
+                elif selected_feature == 'poutcome':
+                    st.write("💡 *Note:* Customers with a 'success' outcome in the previous campaign show an overwhelmingly positive response rate in the current campaign, indicating highly profitable repeat leads.")
+                elif selected_feature == 'housing':
+                    st.write("💡 *Note:* Clients *without* a housing loan are noticeably more likely to subscribe to a term deposit, likely because they do not have active mortgage commitments.")
+                    
+        # ── Tab 2: Demographic & Financial Deep-Dives ──
+        with tab2:
+            st.subheader("💼 Financial Profile Analysis")
+            
+            # Chart: Balance vs Job Category Box Plot
+            fig_box = px.box(df, x='job', y='balance', color='deposit',
+                             color_discrete_map={'yes': '#34d399', 'no': '#f87171'},
+                             title="Account Balance Ranges by Job Category & Campaign Response (Outliers Hidden)",
+                             points=False)
+            fig_box.update_layout(
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font_color="#94a3b8",
+                xaxis=dict(gridcolor='#1e293b'),
+                yaxis=dict(gridcolor='#1e293b')
+            )
+            st.plotly_chart(fig_box, use_container_width=True)
+            
+            c_deep1, c_deep2 = st.columns(2)
+            
+            with c_deep1:
+                st.subheader("📈 Statistical Overview")
+                with st.expander("View Detailed Parameter Statistics"):
+                    num_cols = df.select_dtypes(include=['number']).columns
+                    stats = df[num_cols].describe().T[['mean', 'std', 'min', 'max']]
+                    try:
+                        st.dataframe(stats.style.format("{:.2f}").background_gradient(cmap='Blues'), use_container_width=True)
+                    except Exception:
+                        st.dataframe(stats.style.format("{:.2f}"), use_container_width=True)
+                st.write("This table summarizes the central tendency and spreads of client ages, balances, call lengths, and frequencies.")
+                
+            with c_deep2:
+                st.subheader("📞 Interaction Intensity vs Outcome")
+                # Grouped call duration by outcome
+                fig_dur = px.histogram(df, x='duration', color='deposit',
+                                       marginal='box', opacity=0.75, barmode='overlay',
+                                       color_discrete_map={'yes': '#34d399', 'no': '#f87171'},
+                                       title="Duration Distribution & Box Summary")
+                fig_dur.update_layout(
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    font_color="#94a3b8",
+                    xaxis=dict(gridcolor='#1e293b'),
+                    yaxis=dict(gridcolor='#1e293b')
+                )
+                st.plotly_chart(fig_dur, use_container_width=True)
+                
+            st.markdown("---")
+            st.subheader("📂 Customer Data Explorer")
+            with st.expander("Preview Sample Rows from the Raw Dataset", expanded=False):
+                st.dataframe(df.head(100), use_container_width=True)
+                st.caption(f"Displaying the first 100 rows out of {len(df):,} records for structure reference.")
+
+        # ── Tab 3: ML Model Insights ──
+        with tab3:
+            st.subheader("🧠 Machine Learning Model Insights")
+            st.write("These metrics and feature importances are extracted directly from the trained Gradient Boosting model pipeline stored in `gb_model.pkl`.")
+            
+            if model_loaded:
                 try:
-                    st.dataframe(stats.style.format("{:.2f}").background_gradient(cmap='Blues'), use_container_width=True)
-                except Exception:
-                    st.dataframe(stats.style.format("{:.2f}"), use_container_width=True)
-            st.write("The statistics above summarise the numerical distribution of age, balance, duration, and campaign history across the 11,162 customer records.")
-            
-        # Charts row 2
-        c3, c4 = st.columns(2)
-        with c3:
-            st.subheader("Age Distribution")
-            fig_age = px.histogram(df, x='age', nbins=20, color_discrete_sequence=['#3b82f6'])
-            fig_age.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="#94a3b8")
-            st.plotly_chart(fig_age, use_container_width=True)
-            
-        with c4:
-            st.subheader("Job Type vs Campaign Response")
-            job_response = pd.crosstab(df['job'], df['deposit']).reset_index()
-            fig_job = px.bar(job_response, x='job', y=['no', 'yes'], barmode='group',
-                            color_discrete_sequence=['#f87171', '#34d399'])
-            fig_job.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="#94a3b8")
-            st.plotly_chart(fig_job, use_container_width=True)
+                    # Parse model details
+                    preprocessor = model_pipeline.named_steps['preprocessor']
+                    classifier = model_pipeline.named_steps['classifier']
+                    
+                    # Extract numerical features
+                    num_features = list(preprocessor.transformers_[0][2])
+                    
+                    # Extract categorical features (one-hot encoded)
+                    cat_transformer = preprocessor.transformers_[1][1]
+                    cat_cols = preprocessor.transformers_[1][2]
+                    cat_features = list(cat_transformer.get_feature_names_out(cat_cols))
+                    
+                    all_features = num_features + cat_features
+                    importances = classifier.feature_importances_
+                    
+                    feat_imp = pd.DataFrame({
+                        'Feature': all_features,
+                        'Importance': importances
+                    }).sort_values(by='Importance', ascending=False).head(12)
+                    
+                    c_model1, c_model2 = st.columns([2, 1])
+                    
+                    with c_model1:
+                        fig_imp = px.bar(feat_imp, y='Feature', x='Importance', orientation='h',
+                                         color='Importance', color_continuous_scale='blues',
+                                         title="Top 12 Most Influential Features in Model Prediction")
+                        fig_imp.update_layout(
+                            paper_bgcolor='rgba(0,0,0,0)',
+                            plot_bgcolor='rgba(0,0,0,0)',
+                            font_color="#94a3b8",
+                            yaxis={'categoryorder':'total ascending', 'gridcolor': '#1e293b'},
+                            xaxis={'gridcolor': '#1e293b'}
+                        )
+                        st.plotly_chart(fig_imp, use_container_width=True)
+                        
+                    with c_model2:
+                        st.markdown("### ⚙️ Pipeline Details")
+                        st.markdown("""
+                        - **Algorithm**: `GradientBoostingClassifier`
+                        - **Hyperparameters**:
+                          - Estimators: `100`
+                          - Learning Rate: `0.1`
+                          - Max Depth: `5`
+                          - Random State: `42`
+                        - **Data Processing**:
+                          - Categorical: `OneHotEncoder`
+                          - Numerical: `StandardScaler`
+                        """)
+                        
+                        st.info("### 🔑 High Importance Factors\n"
+                                "1. **Call Duration (`duration`)**: Dominant predictor of positive conversions.\n"
+                                "2. **Previous Success (`poutcome`)**: Best lead source.\n"
+                                "3. **Contact Method & History**: Influences receptiveness and timing.")
+                        
+                except Exception as e:
+                    st.warning(f"Could not parse model pipeline feature importances: {str(e)}")
+                    st.info("Ensure `gb_model.pkl` corresponds to the original trained column pipeline in `train_model.py`.")
+            else:
+                st.error("Model pipeline file (`gb_model.pkl`) not found or loaded. Please run `train_model.py` in the terminal first to see these insights.")
 
 # ── PAGE 2: BULK SCANNER ──
 elif page == "Bulk Scanner":
