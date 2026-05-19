@@ -146,48 +146,47 @@ elif page == "Bulk Scanner":
                 
             st.success(f"File '{uploaded_file.name}' uploaded successfully. ({len(upload_df)} records)")
             
-            if st.button("Run Batch Prediction", type="primary"):
-                with st.spinner("Processing records..."):
-                    time.sleep(1) # Fake delay for visual feedback
+            with st.spinner("Processing records..."):
+                time.sleep(0.5) # Quick delay for visual feedback
+                
+                # Ensure all columns are present
+                required_cols = ['age', 'job', 'marital', 'education', 'default', 'balance', 'housing', 'loan', 'contact', 'day', 'month', 'duration', 'campaign', 'pdays', 'previous', 'poutcome']
+                
+                # Find missing columns
+                missing = [c for c in required_cols if c not in upload_df.columns]
+                if missing:
+                    st.error(f"Missing required columns in uploaded file: {', '.join(missing)}")
+                else:
+                    # Make predictions using the ML model pipeline
+                    predictions = model_pipeline.predict(upload_df[required_cols])
+                    # Get probabilities for confidence score
+                    probs = model_pipeline.predict_proba(upload_df[required_cols])
                     
-                    # Ensure all columns are present
-                    required_cols = ['age', 'job', 'marital', 'education', 'default', 'balance', 'housing', 'loan', 'contact', 'day', 'month', 'duration', 'campaign', 'pdays', 'previous', 'poutcome']
+                    upload_df['Prediction'] = ['Yes' if p == 1 else 'No' for p in predictions]
+                    upload_df['Confidence'] = [f"{max(prob)*100:.1f}%" for prob in probs]
                     
-                    # Find missing columns
-                    missing = [c for c in required_cols if c not in upload_df.columns]
-                    if missing:
-                        st.error(f"Missing required columns in uploaded file: {', '.join(missing)}")
-                    else:
-                        # Make predictions using the ML model pipeline
-                        predictions = model_pipeline.predict(upload_df[required_cols])
-                        # Get probabilities for confidence score
-                        probs = model_pipeline.predict_proba(upload_df[required_cols])
+                    # Show summary
+                    yes_count = sum(predictions)
+                    st.subheader("Prediction Results")
+                    c1, c2, c3 = st.columns(3)
+                    c1.metric("Total Processed", len(upload_df))
+                    c2.metric("Will Subscribe", yes_count)
+                    c3.metric("Won't Subscribe", len(upload_df) - yes_count)
+                    
+                    # Show data
+                    display_cols = ['age', 'job', 'balance', 'duration', 'Prediction', 'Confidence']
+                    st.dataframe(upload_df[display_cols].head(100), use_container_width=True)
+                    if len(upload_df) > 100:
+                        st.caption(f"Showing first 100 rows of {len(upload_df)}.")
                         
-                        upload_df['Prediction'] = ['Yes' if p == 1 else 'No' for p in predictions]
-                        upload_df['Confidence'] = [f"{max(prob)*100:.1f}%" for prob in probs]
-                        
-                        # Show summary
-                        yes_count = sum(predictions)
-                        st.subheader("Prediction Results")
-                        c1, c2, c3 = st.columns(3)
-                        c1.metric("Total Processed", len(upload_df))
-                        c2.metric("Will Subscribe", yes_count)
-                        c3.metric("Won't Subscribe", len(upload_df) - yes_count)
-                        
-                        # Show data
-                        display_cols = ['age', 'job', 'balance', 'duration', 'Prediction', 'Confidence']
-                        st.dataframe(upload_df[display_cols].head(100), use_container_width=True)
-                        if len(upload_df) > 100:
-                            st.caption(f"Showing first 100 rows of {len(upload_df)}.")
-                            
-                        # Download button
-                        csv = upload_df.to_csv(index=False).encode('utf-8')
-                        st.download_button(
-                            label="⬇ Download Complete Results CSV",
-                            data=csv,
-                            file_name='bulk_predictions.csv',
-                            mime='text/csv',
-                        )
+                    # Download button
+                    csv = upload_df.to_csv(index=False).encode('utf-8')
+                    st.download_button(
+                        label="⬇ Download Complete Results CSV",
+                        data=csv,
+                        file_name='bulk_predictions.csv',
+                        mime='text/csv',
+                    )
         except Exception as e:
             st.error(f"Error processing file: {str(e)}")
 
@@ -265,8 +264,40 @@ elif page == "Predict Subscription":
             st.progress(int(confidence) / 100, text="Confidence Level")
             
         # Feature insight for the specific prediction
-        st.info("### 💡 Key Influencing Factors\n" + 
-            ("• **Duration:** Positive signal (long conversation).\n" if duration > 300 else "") +
-            ("• **Duration:** Negative signal (short conversation).\n" if duration < 100 else "") +
-            ("• **Previous Outcome:** Very strong positive signal (customer bought before).\n" if poutcome == 'success' else "") +
-            ("• **Balance:** Positive signal (high balance).\n" if balance > 2000 else ""))
+        factors = []
+        
+        # Duration insights
+        if duration > 300:
+            factors.append("• **Call Duration (Long):** Convincing conversation time (> 5 mins) is historically a strong positive indicator.")
+        elif duration < 100:
+            factors.append("• **Call Duration (Short):** Very brief conversation (< 1.6 mins) usually points to low subscriber interest.")
+        else:
+            factors.append(f"• **Call Duration (Moderate):** Conversation length of {duration} seconds provides a standard active window for building customer interest.")
+            
+        # Previous outcome
+        if poutcome == 'success':
+            factors.append("• **Previous Campaign Success:** Customer previously subscribed, indicating an exceptionally high propensity to buy again.")
+        elif poutcome == 'failure':
+            factors.append("• **Previous Campaign Failure:** Customer previously rejected a campaign, which requires a highly personalized follow-up strategy.")
+        else:
+            factors.append("• **New Contact Segment:** No previous campaign outcome recorded. Prediction depends highly on current call duration and financials.")
+            
+        # Balance insights
+        if balance > 2000:
+            factors.append(f"• **Account Balance (High):** Customer has a strong balance of ₹{balance:,}, making a term deposit purchase highly feasible.")
+        elif balance < 0:
+            factors.append(f"• **Account Balance (Negative):** Customer has a negative balance of ₹{balance:,}, decreasing subscription likelihood.")
+        else:
+            factors.append(f"• **Account Balance (Stable):** Customer has a stable balance of ₹{balance:,}.")
+
+        # Loans
+        if housing == 'no' and loan == 'no':
+            factors.append("• **No Debt Load:** No housing or personal loans are active, giving the customer higher disposable cash for savings deposits.")
+        elif housing == 'yes':
+            factors.append("• **Housing Loan Active:** Existing mortgage commitment may reduce potential monthly deposit capacities.")
+            
+        # Job
+        if job in ['retired', 'student']:
+            factors.append(f"• **Demographics:** Customer's job category ({job}) belongs to a cohort that historically values fixed interest investments.")
+
+        st.info("### 💡 Key Influencing Factors\n" + "\n".join(factors))
