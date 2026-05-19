@@ -163,7 +163,8 @@ elif page == "Bulk Scanner":
                     probs = model_pipeline.predict_proba(upload_df[required_cols])
                     
                     upload_df['Prediction'] = ['Yes' if p == 1 else 'No' for p in predictions]
-                    upload_df['Confidence'] = [f"{max(prob)*100:.1f}%" for prob in probs]
+                    upload_df['ConfidenceScore'] = [max(prob)*100 for prob in probs]
+                    upload_df['Confidence'] = [f"{score:.1f}%" for score in upload_df['ConfidenceScore']]
                     
                     # Show summary
                     yes_count = sum(predictions)
@@ -172,6 +173,48 @@ elif page == "Bulk Scanner":
                     c1.metric("Total Processed", len(upload_df))
                     c2.metric("Will Subscribe", yes_count)
                     c3.metric("Won't Subscribe", len(upload_df) - yes_count)
+                    
+                    st.markdown("---")
+                    
+                    # Visualisations Row 1
+                    st.subheader("📊 Bulk Prediction Visualisations")
+                    v1, v2 = st.columns(2)
+                    with v1:
+                        fig_pred_donut = px.pie(upload_df, names='Prediction', title='Predicted Subscription Split',
+                                                color='Prediction', color_discrete_map={'Yes': '#34d399', 'No': '#f87171'},
+                                                hole=0.6)
+                        fig_pred_donut.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="#94a3b8")
+                        st.plotly_chart(fig_pred_donut, use_container_width=True)
+                    
+                    with v2:
+                        fig_conf_dist = px.histogram(upload_df, x='ConfidenceScore', title='Prediction Confidence Distribution',
+                                                     color='Prediction', color_discrete_map={'Yes': '#34d399', 'No': '#f87171'},
+                                                     labels={'ConfidenceScore': 'Confidence Score (%)'}, nbins=20)
+                        fig_conf_dist.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="#94a3b8")
+                        st.plotly_chart(fig_conf_dist, use_container_width=True)
+                        
+                    # Visualisations Row 2
+                    v3, v4 = st.columns(2)
+                    with v3:
+                        job_pred = pd.crosstab(upload_df['job'], upload_df['Prediction']).reset_index()
+                        for col in ['No', 'Yes']:
+                            if col not in job_pred.columns:
+                                job_pred[col] = 0
+                        fig_job_pred = px.bar(job_pred, x='job', y=['No', 'Yes'], barmode='group',
+                                              title='Predictions by Job Type',
+                                              color_discrete_sequence=['#f87171', '#34d399'])
+                        fig_job_pred.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="#94a3b8")
+                        st.plotly_chart(fig_job_pred, use_container_width=True)
+                        
+                    with v4:
+                        fig_bal_box = px.box(upload_df, x='Prediction', y='balance', title='Account Balance by Prediction',
+                                             color='Prediction', color_discrete_map={'Yes': '#34d399', 'No': '#f87171'},
+                                             points="outliers")
+                        fig_bal_box.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="#94a3b8")
+                        st.plotly_chart(fig_bal_box, use_container_width=True)
+                        
+                    st.markdown("---")
+                    st.subheader("📋 Detailed Prediction Records")
                     
                     # Show data
                     display_cols = ['age', 'job', 'balance', 'duration', 'Prediction', 'Confidence']
@@ -199,37 +242,38 @@ elif page == "Predict Subscription":
         st.stop()
         
     with st.form("prediction_form"):
-        st.subheader("Customer Parameters")
+        st.subheader("📝 Customer Profile & Campaign Details")
         
-        tab1, tab2, tab3 = st.tabs(["👤 Personal Info", "💰 Financials", "📞 Campaign Details"])
+        c1, c2 = st.columns(2)
         
-        with tab1:
-            col1, col2 = st.columns(2)
-            age = col1.number_input("Age", min_value=18, max_value=100, value=38)
-            job = col2.selectbox("Job", ["management", "technician", "entrepreneur", "blue-collar", "unknown", "retired", "admin.", "services", "self-employed", "unemployed", "housemaid", "student"])
-            marital = col1.selectbox("Marital Status", ["married", "single", "divorced"])
-            education = col2.selectbox("Education", ["tertiary", "secondary", "unknown", "primary"])
+        with c1:
+            st.markdown("#### 👤 Personal Info")
+            age = st.number_input("Age", min_value=18, max_value=100, value=38)
+            job = st.selectbox("Job", ["management", "technician", "entrepreneur", "blue-collar", "unknown", "retired", "admin.", "services", "self-employed", "unemployed", "housemaid", "student"])
+            marital = st.selectbox("Marital Status", ["married", "single", "divorced"])
+            education = st.selectbox("Education", ["tertiary", "secondary", "unknown", "primary"])
             
-        with tab2:
-            col1, col2 = st.columns(2)
-            balance = col1.number_input("Balance (₹)", value=2000, step=100)
-            default = col2.selectbox("Credit Default", ["no", "yes"])
-            housing = col1.selectbox("Housing Loan", ["yes", "no"])
-            loan = col2.selectbox("Personal Loan", ["no", "yes"])
+            st.markdown("#### 💰 Financials")
+            balance = st.number_input("Balance (₹)", value=2000, step=100)
+            housing = st.selectbox("Housing Loan", ["no", "yes"])
+            loan = st.selectbox("Personal Loan", ["no", "yes"])
             
-        with tab3:
-            col1, col2, col3 = st.columns(3)
-            duration = col1.number_input("Call Duration (sec)", value=250, step=10)
-            campaign = col2.number_input("Contacts in Campaign", min_value=1, value=2)
-            contact = col3.selectbox("Contact Type", ["cellular", "unknown", "telephone"])
+        with c2:
+            st.markdown("#### 📞 Call Details")
+            duration = st.number_input("Call Duration (seconds)", value=250, step=10)
+            campaign = st.number_input("Contacts in current campaign", min_value=1, value=1)
             
-            day = col1.number_input("Day of Month", min_value=1, max_value=31, value=15)
-            month = col2.selectbox("Month", ["may", "jun", "jul", "aug", "sep", "oct", "nov", "dec", "jan", "feb", "mar", "apr"])
-            
-            pdays = col1.number_input("Days since last contact", value=-1)
-            previous = col2.number_input("Previous Contacts", min_value=0, value=0)
-            poutcome = col3.selectbox("Previous Outcome", ["unknown", "other", "failure", "success"])
-            
+            # Collapsible Advanced Settings for all other inputs so the UI remains clean and simplified by default!
+            st.markdown("#### ⚙️ Campaign Settings")
+            with st.expander("🛠️ Advanced Parameters (Optional)", expanded=False):
+                default = st.selectbox("Credit Default", ["no", "yes"])
+                contact = st.selectbox("Contact Type", ["cellular", "unknown", "telephone"])
+                day = st.number_input("Day of Month", min_value=1, max_value=31, value=15)
+                month = st.selectbox("Month", ["may", "jun", "jul", "aug", "sep", "oct", "nov", "dec", "jan", "feb", "mar", "apr"])
+                pdays = st.number_input("Days since last contact", value=-1)
+                previous = st.number_input("Previous Contacts", min_value=0, value=0)
+                poutcome = st.selectbox("Previous Outcome", ["unknown", "other", "failure", "success"])
+                
         st.markdown("<br>", unsafe_allow_html=True)
         submit = st.form_submit_button("🔮 Run ML Prediction", type="primary", use_container_width=True)
         
