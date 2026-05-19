@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Starbucks - Premium Coffee Experience</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Barlow', sans-serif;
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #2C1810 0%, #1A0F07 100%);
+            color: #FEFCF3;
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1rem 5%;
+            background: rgba(44, 24, 16, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #00754A, #1B4332);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            transform: perspective(500px) rotateX(0deg);
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .logo:hover {
+            transform: perspective(500px) rotateX(15deg) rotateY(10deg);
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 3rem;
+        }
+
+        .nav-links a {
+            color: #FEFCF3;
+            text-decoration: none;
+            font-weight: 500;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 0;
+            background: linear-gradient(90deg, #00754A, #71CD97);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .menu-toggle {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+        }
+
+        .menu-toggle span {
+            width: 25px;
+            height: 3px;
+            background: #FEFCF3;
+            margin: 3px 0;
+            transition: 0.3s;
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><radialGradient id="a" cx="50%" cy="50%"><stop offset="0%" stop-color="%23ffffff11"/><stop offset="100%" stop-color="%23ffffff00"/></radialGradient></defs><circle cx="300" cy="300" r="200" fill="url(%23a)"><animate attributeName="r" values="200;250;200" dur="8s" repeatCount="indefinite"/><animate attributeName="cx" values="300;400;300" dur="8s" repeatCount="indefinite"/><animate attributeName="cy" values="300;350;300" dur="8s" repeatCount="indefinite"/></circle><circle cx="700" cy="600" r="150" fill="url(%23a)"><animate attributeName="r" values="150;200;150" dur="10s" repeatCount="indefinite"/><animate attributeName="cx" values="700;800;700" dur="10s" repeatCount="indefinite"/><animate attributeName="cy" values="600;650;600" dur="10s" repeatCount="indefinite"/></circle></svg>');
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        .hero-content {
+            text-align: center;
+            z-index: 2;
+            max-width: 800px;
+            transform-style: preserve-3d;
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(45deg, #FEFCF3, #D4A574);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            transform: perspective(1000px) rotateX(20deg);
+            transition: all 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .hero h1:hover {
+            transform: perspective(1000px) rotateX(0deg) translateZ(50px);
+        }
+
+        .hero p {
+            font-size: 1.5rem;
+            margin-bottom: 3rem;
+            opacity: 0.9;
+            transform: perspective(500px) translateZ(-20px);
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 1.2rem 3rem;
+            background: linear-gradient(45deg, #00754A, #71CD97);
+            color: #FEFCF3;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            position: relative;
+            overflow: hidden;
+            transform: perspective(500px) rotateX(-10deg) translateZ(0);
+            transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 20px 40px rgba(0, 117, 74, 0.3);
+        }
+
+        .cta-button:hover {
+            transform: perspective(500px) rotateX(0deg) translateZ(30px) translateY(-10px);
+            box-shadow: 0 30px 60px rgba(0, 117, 74, 0.4);
+        }
+
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .cta-button:hover::before {
+            left: 100%;
+        }
+
+        /* Menu Section */
+        .menu {
+            padding: 8rem 5% 4rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 4rem;
+            background: linear-gradient(45deg, #FEFCF3, #D4A574);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .coffee-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 3rem;
+            perspective: 1000px;
+        }
+
+        .coffee-card {
+            background: rgba(44, 24, 16, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 2.5rem;
+            text-align: center;
+            position: relative;
+            border: 1px solid rgba(255, 252, 243, 0.1);
+            transform-style: preserve-3d;
+            transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+
+        .coffee-card:hover {
+            transform: rotateY(10deg) rotateX(5deg) translateZ(50px) translateY(-20px);
+            box-shadow: 0 50px 100px rgba(0, 0, 0, 0.5);
+        }
+
+        .coffee-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            display: block;
+            transform: perspective(500px) rotateX(0deg);
+            transition: all 0.5s ease;
+        }
+
+        .coffee-card:hover .coffee-icon {
+            transform: perspective(500px) rotateX(-20deg) scale(1.2);
+        }
+
+        .coffee-card h3 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #D4A574;
+        }
+
+        .coffee-card p {
+            opacity: 0.9;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .price {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #71CD97;
+        }
+
+        /* Scroll Animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 1s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .menu-toggle {
+                display: flex;
+            }
+
+            .hero h1 {
+                font-size: 3rem;
+            }
+
+            .coffee-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(44, 24, 16, 0.5);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(#00754A, #71CD97);
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">☕ Starbucks</div>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#menu">Menu</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <div class="menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </nav>
+    </header>
+
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1>Discover Your Perfect Brew</h1>
+            <p>Experience the rich aroma and exquisite taste of our world-famous coffees, crafted with passion and perfection.</p>
+            <a href="#menu" class="cta-button">Explore Menu</a>
+        </div>
+    </section>
+
+    <section id="menu" class="menu fade-in">
+        <h2 class="section-title">Our Famous Coffees</h2>
+        <div class="coffee-grid">
+            <div class="coffee-card fade-in">
+                <div class="coffee-icon">☕</div>
+                <h3>Caramel Macchiato</h3>
+                <p>Espresso with vanilla-flavored syrup, steamed milk, and caramel drizzle. A sweet symphony in every sip.</p>
+                <div class="price">$5.45</div>
+            </div>
+
+            <div class="coffee-card fade-in">
+                <div class="coffee-icon">🌰</div>
+                <h3>Pumpkin Spice Latte</h3>
+                <p>Our signature fall favorite with real pumpkin, espresso, steamed milk, and pumpkin spice topping.</p>
+                <div class="price">$5.75</div>
+            </div>
+
+            <div class="coffee-card fade-in">
+                <div class="coffee-icon">⭐</div>
+                <h3>Frappuccino®</h3>
+                <p>Blended coffee beverage with ice, espresso, milk, and sweet flavors. Perfect for any time.</p>
+                <div class="price">$6.25</div>
+            </div>
+
+            <div class="coffee-card fade-in">
+                <div class="coffee-icon">☕</div>
+                <h3>Cold Brew</h3>
+                <p>Smooth, slow-steeped coffee served over ice. Bold flavor, less acidity, pure refreshment.</p>
+                <div class="price">$4.95</div>
+            </div>
+
+            <div class="coffee-card fade-in">
+                <div class="coffee-icon">🌺</div>
+                <h3>Matcha Latte</h3>
+                <p>Premium matcha green tea powder whisked with steamed milk and a touch of sweetness.</p>
+                <div class="price">$5.95</div>
+            </div>
+
+            <div class="coffee-card fade-in">
+                <div class="coffee-icon">🔥</div>
+                <h3>Americano</h3>
+                <p>Classic espresso shots topped with hot water. Strong, smooth, and perfectly balanced.</p>
+                <div class="price">$3.95</div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 100) {
+                header.style.background = 'rgba(44, 24, 16, 0.98)';
+                header.style.backdropFilter = 'blur(30px)';
+            } else {
+                header.style.background = 'rgba(44, 24, 16, 0.95)';
+                header.style.backdropFilter = 'blur(20px)';
+            }
+        });
+
+        // Parallax effect for hero
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const hero = document.querySelector('.hero');
+            const speed = scrolled * 0.5;
+            hero.style.transform = `translateY(${speed}px)`;
+        });
+    </script>
+</body>
+</html>
