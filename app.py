@@ -1,3 +1,4 @@
+# Bank Campaign Sense - Streamlit Deployment Fix
 import streamlit as st
 import pandas as pd
 import pickle
@@ -99,7 +100,10 @@ if page == "Overview":
             with st.expander("View Detailed Parameter Statistics"):
                 num_cols = df.select_dtypes(include=['number']).columns
                 stats = df[num_cols].describe().T[['mean', 'std', 'min', 'max']]
-                st.dataframe(stats.style.format("{:.2f}").background_gradient(cmap='Blues'), use_container_width=True)
+                try:
+                    st.dataframe(stats.style.format("{:.2f}").background_gradient(cmap='Blues'), use_container_width=True)
+                except Exception:
+                    st.dataframe(stats.style.format("{:.2f}"), use_container_width=True)
             st.write("The statistics above summarise the numerical distribution of age, balance, duration, and campaign history across the 11,162 customer records.")
             
         # Charts row 2
